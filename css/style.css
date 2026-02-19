@@ -152,6 +152,61 @@ main {
   );
 }
 
+/* ── Hero Section with Banner Background ──────────────────────────────── */
+.hero-section-banner {
+  position: relative;
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+}
+
+.hero-section-banner .absolute.inset-0 img {
+  object-position: center bottom;
+}
+
+/* Force flex-item uk-container to behave like a block (full width),
+   so its auto margins + padding align the text with the navbar logo */
+.hero-section-banner .uk-container {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .hero-section-banner {
+    min-height: 380px;
+  }
+
+  .hero-section-banner .absolute.inset-0 img {
+    object-position: center bottom;
+  }
+
+  /* Center text block and buttons on mobile */
+  .hero-section-banner .uk-container > div {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+  }
+
+  .hero-section-banner .uk-container .flex {
+    justify-content: center;
+  }
+
+  /* Add gradient overlay on mobile to make text readable against the image */
+  .hero-section-banner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    /* Fade from background color (top) to transparent (bottom) */
+    background: linear-gradient(
+      to bottom,
+      hsl(var(--background) / 0.8) 0%,
+      hsl(var(--background) / 0.4) 60%,
+      transparent 100%
+    );
+    z-index: 1;
+    pointer-events: none;
+  }
+}
+
 /* ── Product Cards ──────────────────────────────────────────────────── */
 .product-card {
   transition:
