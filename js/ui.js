@@ -231,7 +231,9 @@ function renderProducts(products, containerId = "product-grid") {
 
   // Requirement: Array Method — .map() for rendering lists
   // Store products in cache so buttons can reference by id (avoids quote-breaking inline JSON)
-  products.forEach((p) => { _productCache[p.id] = p; });
+  products.forEach((p) => {
+    _productCache[p.id] = p;
+  });
 
   grid.innerHTML = products
     .map(
@@ -333,19 +335,23 @@ function renderProductDetail(product) {
 
         ${product.stock !== undefined ? `<p class="text-sm text-muted-foreground mb-6"><i data-lucide="package" class="h-4 w-4 inline mr-1"></i> ${product.stock > 0 ? product.stock + " in stock" : "Out of stock"}</p>` : ""}
 
-        ${specsHTML ? `
-        <!-- Specifications -->
-        <div class="mb-8">
-          <h2 class="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-            <i data-lucide="cpu" class="h-5 w-5"></i> Specifications
-          </h2>
-          <div class="prose specs-table">${specsHTML}</div>
-        </div>` : ""}
-
         <!-- Description rendered from markdown -->
         <div class="prose">${descHTML}</div>
       </div>
     </div>
+
+    ${
+      specsHTML ?
+        `
+    <!-- Specifications -->
+    <div class="mt-12 border-t pt-8" style="border-color:hsl(var(--border)/0.5)">
+      <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
+        <i data-lucide="cpu" class="h-5 w-5"></i> Specifications
+      </h2>
+      <div class="prose specs-table max-w-none">${specsHTML}</div>
+    </div>`
+      : ""
+    }
 
     <!-- Reviews Section -->
     <div id="product-reviews" class="mt-12">
@@ -374,7 +380,7 @@ async function loadProductReviews(productId) {
 
   try {
     const reviews = await apiGet(
-      `/rest/v1/reviews?product_id=eq.${productId}&select=*&order=created_at.desc`
+      `/rest/v1/reviews?product_id=eq.${productId}&select=*&order=created_at.desc`,
     );
 
     if (!reviews || reviews.length === 0) {
@@ -383,7 +389,9 @@ async function loadProductReviews(productId) {
     }
 
     // Calculate average rating
-    const avgRating = (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1);
+    const avgRating = (
+      reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    ).toFixed(1);
 
     container.innerHTML = `
       <div class="flex items-center gap-3 mb-6 p-4 rounded-lg" style="background:hsl(var(--muted)/0.3)">
@@ -393,20 +401,26 @@ async function loadProductReviews(productId) {
           <p class="text-xs text-muted-foreground mt-1">Based on ${reviews.length} review${reviews.length !== 1 ? "s" : ""}</p>
         </div>
       </div>
-      ${reviews.map(review => `
-        <div class="uk-card uk-card-body p-4">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground" style="background:hsl(var(--primary))">
-                ${review.reviewer_name.charAt(0)}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+        ${reviews
+          .map(
+            (review) => `
+          <div class="uk-card uk-card-body p-4 flex flex-col h-full border rounded-lg" style="border-color:hsl(var(--border)/0.5)">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground" style="background:hsl(var(--primary))">
+                  ${review.reviewer_name.charAt(0)}
+                </div>
+                <span class="font-semibold text-sm text-foreground">${review.reviewer_name}</span>
               </div>
-              <span class="font-semibold text-sm text-foreground">${review.reviewer_name}</span>
+              <div class="flex text-yellow-500 text-xs">${generateStarHTML(review.rating)}</div>
             </div>
-            <div class="flex text-yellow-500 text-xs">${generateStarHTML(review.rating)}</div>
+            <p class="text-sm text-muted-foreground flex-grow">${review.review_text}</p>
           </div>
-          <p class="text-sm text-muted-foreground">${review.review_text}</p>
-        </div>
-      `).join("")}
+        `,
+          )
+          .join("")}
+      </div>
     `;
 
     if (typeof lucide !== "undefined") lucide.createIcons();
@@ -418,7 +432,7 @@ async function loadProductReviews(productId) {
 
 function generateStarHTML(rating) {
   const fullStars = Math.floor(rating);
-  const hasHalfStar = (rating % 1) >= 0.5;
+  const hasHalfStar = rating % 1 >= 0.5;
   let html = "";
   for (let i = 0; i < fullStars; i++) {
     html += '<i data-lucide="star" class="h-4 w-4 fill-current"></i>';
@@ -585,7 +599,7 @@ function initScrollAnimations() {
         }
       });
     },
-    { threshold: 0.1 }
+    { threshold: 0.1 },
   );
 
   // Observe all product cards, uk-card elements, and sections
@@ -610,7 +624,7 @@ function refreshScrollAnimations() {
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     document
