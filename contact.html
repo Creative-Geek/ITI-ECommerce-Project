@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>byteStore - Contact Us</title>
+    <meta name="description" content="Get in touch with the byteStore team." />
+    <link rel="preconnect" href="https://rsms.me/" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              border: "hsl(var(--border))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: "hsl(var(--primary))",
+              "primary-foreground": "hsl(var(--primary-foreground))",
+              muted: "hsl(var(--muted))",
+              "muted-foreground": "hsl(var(--muted-foreground))",
+              card: "hsl(var(--card))",
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script>
+      if (localStorage.getItem("theme") === "dark")
+        document.documentElement.classList.add("dark");
+      document.documentElement.classList.add(
+        "uk-theme-zinc",
+        "uk-radii-md",
+        "uk-shadows-sm",
+        "uk-font-sm",
+      );
+    </script>
+  </head>
+  <body class="bg-background text-foreground">
+    <main class="uk-container py-12">
+      <div class="max-w-2xl mx-auto">
+        <div class="text-center mb-8">
+          <h1 class="text-3xl font-bold mb-2">Contact Us</h1>
+          <p class="text-muted-foreground">
+            Have a question? We'd love to hear from you.
+          </p>
+        </div>
+
+        <!-- Contact Info Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div class="uk-card uk-card-body text-center">
+            <i
+              data-lucide="mail"
+              class="h-6 w-6 mx-auto mb-2"
+              style="color: hsl(var(--primary))"
+            ></i>
+            <p class="text-sm font-medium">Email</p>
+            <p class="text-xs text-muted-foreground mt-1">
+              support@bytestore.eg
+            </p>
+          </div>
+          <div class="uk-card uk-card-body text-center">
+            <i
+              data-lucide="phone"
+              class="h-6 w-6 mx-auto mb-2"
+              style="color: hsl(var(--primary))"
+            ></i>
+            <p class="text-sm font-medium">Phone</p>
+            <p class="text-xs text-muted-foreground mt-1">+20 100 123 4567</p>
+          </div>
+          <div class="uk-card uk-card-body text-center">
+            <i
+              data-lucide="map-pin"
+              class="h-6 w-6 mx-auto mb-2"
+              style="color: hsl(var(--primary))"
+            ></i>
+            <p class="text-sm font-medium">Location</p>
+            <p class="text-xs text-muted-foreground mt-1">Cairo, Egypt</p>
+          </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="uk-card uk-card-body">
+          <form id="contactForm" class="space-y-4" novalidate>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="uk-form-label" for="contact-name">Name *</label>
+                <input
+                  class="uk-input mt-1"
+                  type="text"
+                  id="contact-name"
+                  required
+                />
+                <p
+                  class="text-xs text-destructive mt-1 hidden"
+                  id="contact-name-error"
+                >
+                  Name is required
+                </p>
+              </div>
+              <div>
+                <label class="uk-form-label" for="contact-email">Email *</label>
+                <input
+                  class="uk-input mt-1"
+                  type="email"
+                  id="contact-email"
+                  required
+                />
+                <p
+                  class="text-xs text-destructive mt-1 hidden"
+                  id="contact-email-error"
+                >
+                  Valid email is required
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label class="uk-form-label" for="contact-subject"
+                >Subject *</label
+              >
+              <input
+                class="uk-input mt-1"
+                type="text"
+                id="contact-subject"
+                required
+              />
+              <p
+                class="text-xs text-destructive mt-1 hidden"
+                id="contact-subject-error"
+              >
+                Subject is required
+              </p>
+            </div>
+
+            <div>
+              <label class="uk-form-label" for="contact-message"
+                >Message *</label
+              >
+              <textarea
+                class="uk-textarea mt-1"
+                id="contact-message"
+                rows="5"
+                required
+              ></textarea>
+              <p
+                class="text-xs text-destructive mt-1 hidden"
+                id="contact-message-error"
+              >
+                Message is required
+              </p>
+            </div>
+
+            <button type="submit" class="uk-btn uk-btn-primary w-full">
+              <i data-lucide="send" class="h-4 w-4 mr-2"></i> Send Message
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/js/core.iife.js"
+    ></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Pre-fill email if logged in
+        const user = getCurrentUser();
+        if (user) {
+          document.getElementById("contact-email").value = user.email;
+        }
+
+        // Requirement: Form Validation
+        document
+          .getElementById("contactForm")
+          .addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const fields = [
+              "contact-name",
+              "contact-email",
+              "contact-subject",
+              "contact-message",
+            ];
+            let valid = true;
+
+            fields.forEach((field) => {
+              const input = document.getElementById(field);
+              const error = document.getElementById(field + "-error");
+              if (!input.value.trim()) {
+                error?.classList.remove("hidden");
+                valid = false;
+              } else {
+                error?.classList.add("hidden");
+              }
+            });
+
+            // Email check
+            const emailVal = document.getElementById("contact-email").value;
+            if (emailVal && !/\S+@\S+\.\S+/.test(emailVal)) {
+              document
+                .getElementById("contact-email-error")
+                .classList.remove("hidden");
+              valid = false;
+            }
+
+            if (!valid) {
+              showToast("Please fill in all required fields", "error");
+              return;
+            }
+
+            // Simulate success (no backend for contact form)
+            showToast(
+              "Message sent successfully! We'll get back to you soon.",
+              "success",
+            );
+            document.getElementById("contactForm").reset();
+          });
+      });
+    </script>
+  </body>
+</html>

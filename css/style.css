@@ -1,0 +1,398 @@
+/* ── style.css · byteStore custom overrides & Design System ─────────── */
+
+/* ── Inter Font (from Franken UI's recommended preconnect) ──────────── */
+@import url("https://rsms.me/inter/inter.css");
+
+:root {
+  /* Use Inter like Franken UI quickstart */
+  font-family: Inter, sans-serif;
+  font-feature-settings:
+    "liga" 1,
+    "calt" 1;
+
+  /* ── Cyan / Light-Blue Accent Overrides ────────────────────────────── */
+  --primary: 192 91% 36%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 192 91% 36%;
+  --accent: 192 20% 95%;
+  --accent-foreground: 192 91% 36%;
+}
+
+@supports (font-variation-settings: normal) {
+  :root {
+    font-family: InterVariable, sans-serif;
+  }
+}
+
+.dark {
+  --primary: 192 91% 50%;
+  --primary-foreground: 0 0% 5%;
+  --accent: 192 30% 15%;
+  --accent-foreground: 192 91% 70%;
+}
+
+/* ── Global Layout ──────────────────────────────────────────────────── */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* ── Navbar Fixes ───────────────────────────────────────────────────── */
+.site-navbar {
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background-color: hsl(var(--background) / 0.8);
+  position: sticky;
+  top: 0;
+  z-index: 980;
+}
+
+.site-navbar .logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.site-navbar .logo-text span {
+  color: hsl(var(--primary));
+}
+
+/* ── Logo SVG image ──────────────────────────────────────────────── */
+/* Light mode: SVG has near-white text (#fcfdfa) — invisible on white bg.
+   We invert to black, then hue-rotate to restore the cyan parts. */
+.site-navbar img[alt="byteStore"],
+.site-footer img[alt="byteStore"] {
+  filter: brightness(0) saturate(100%) invert(42%) sepia(96%) saturate(487%)
+    hue-rotate(161deg) brightness(95%);
+  transition: filter 0.3s;
+}
+
+/* Dark mode: use native SVG colors (cyan + near-white look great on dark bg) */
+.dark .site-navbar img[alt="byteStore"],
+.dark .site-footer img[alt="byteStore"] {
+  filter: none;
+}
+
+/* Nav link hover effect */
+.nav-link {
+  position: relative;
+  padding: 0.25rem 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: hsl(var(--foreground));
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: hsl(var(--primary));
+  transition: width 0.2s;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+/* Cart badge on nav */
+.cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 0.65rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ── Hero Section ───────────────────────────────────────────────────── */
+.hero-section {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--background)) 0%,
+    hsl(var(--accent)) 50%,
+    hsl(var(--background)) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 70% 30%,
+    hsl(var(--primary) / 0.08) 0%,
+    transparent 60%
+  );
+}
+
+/* ── Product Cards ──────────────────────────────────────────────────── */
+.product-card {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 12px 24px -8px hsl(var(--primary) / 0.12),
+    0 4px 8px -2px hsl(var(--foreground) / 0.06);
+}
+
+.product-card img {
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover img {
+  transform: scale(1.05);
+}
+
+/* ── Product Detail — Markdown Description (.prose) ─────────────────── */
+.prose {
+  line-height: 1.7;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.9rem;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose h2 {
+  font-size: 1.15rem;
+}
+
+.prose h3 {
+  font-size: 1rem;
+}
+
+.prose p {
+  margin-bottom: 0.75em;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.25em;
+  margin-bottom: 0.75em;
+}
+
+.prose li {
+  margin-bottom: 0.25em;
+}
+
+.prose strong {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+.prose a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+.prose code {
+  font-size: 0.85em;
+  background: hsl(var(--muted));
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+/* ── Toast Notification ─────────────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.toast {
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff;
+  background: hsl(var(--foreground));
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+  animation:
+    toastIn 0.3s ease,
+    toastOut 0.3s ease 2.7s;
+  pointer-events: auto;
+}
+
+.toast.success {
+  background: hsl(142 71% 45%);
+}
+
+.toast.error {
+  background: hsl(0 84% 60%);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+.site-footer {
+  border-top: 1px solid hsl(var(--border) / 0.5);
+  background-color: hsl(var(--card));
+}
+
+/* ── Category Pills (Shop Page) ─────────────────────────────────────── */
+.category-pill {
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid hsl(var(--border));
+  border-radius: 9999px;
+  padding: 0.375rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  background: transparent;
+}
+
+.category-pill:hover {
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary));
+}
+
+.category-pill.active {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+}
+
+/* ── Skeleton Loader ────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--muted) / 0.5) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton 1.5s ease-in-out infinite;
+  border-radius: 0.375rem;
+}
+
+@keyframes skeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .hero-section h1 {
+    font-size: 2rem !important;
+  }
+
+  .desktop-nav {
+    display: none !important;
+  }
+
+  .mobile-nav-toggle {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-nav-toggle {
+    display: none !important;
+  }
+}
+
+/* ── Quantity Controls ──────────────────────────────────────────────── */
+.qty-btn {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.375rem;
+  background: transparent;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.qty-btn:hover {
+  background: hsl(var(--accent));
+}
+
+/* ── Form Pages ─────────────────────────────────────────────────────── */
+.auth-card {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* ── Empty State ────────────────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.empty-state i {
+  margin-bottom: 1rem;
+  opacity: 0.4;
+}

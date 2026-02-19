@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>byteStore - Your Tech Destination</title>
+    <meta
+      name="description"
+      content="byteStore — Premium tech products in Egypt. Shop laptops, phones, audio gear and accessories."
+    />
+
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://rsms.me/" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <!-- Franken UI CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
+    />
+    <!-- Tailwind Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              border: "hsl(var(--border))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: "hsl(var(--primary))",
+              "primary-foreground": "hsl(var(--primary-foreground))",
+              muted: "hsl(var(--muted))",
+              "muted-foreground": "hsl(var(--muted-foreground))",
+              card: "hsl(var(--card))",
+            },
+          },
+        },
+      };
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css" />
+    <!-- Theme init (prevent FOUC) -->
+    <script>
+      if (localStorage.getItem("theme") === "dark")
+        document.documentElement.classList.add("dark");
+      document.documentElement.classList.add(
+        "uk-theme-zinc",
+        "uk-radii-md",
+        "uk-shadows-sm",
+        "uk-font-sm",
+      );
+    </script>
+  </head>
+  <body class="bg-background text-foreground">
+    <main>
+      <!-- Hero Section -->
+      <section class="hero-section py-20 md:py-32">
+        <div class="uk-container relative z-10 text-center">
+          <span
+            class="inline-block text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4 border rounded-full px-3 py-1"
+            style="border-color: hsl(var(--border))"
+          >
+            🚀 New Arrivals Available
+          </span>
+          <h1
+            class="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground mb-4"
+          >
+            Tech That <span style="color: hsl(var(--primary))">Moves</span> You
+          </h1>
+          <p class="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
+            Discover premium laptops, phones, audio gear, and accessories — all
+            at the best prices in Egypt.
+          </p>
+          <div class="flex justify-center gap-3 flex-wrap">
+            <a href="shop.html" class="uk-btn uk-btn-primary uk-btn-md">
+              <i data-lucide="shopping-bag" class="h-4 w-4 mr-2"></i> Browse
+              Shop
+            </a>
+            <a href="#featured" class="uk-btn uk-btn-default uk-btn-md">
+              Featured Products ↓
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Category Cards -->
+      <section class="uk-container py-16">
+        <h2 class="text-2xl font-bold text-center mb-8">Shop by Category</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <a
+            href="shop.html?category=laptop"
+            class="uk-card uk-card-body text-center group no-underline text-foreground hover:shadow-lg transition-shadow"
+          >
+            <i
+              data-lucide="laptop"
+              class="h-8 w-8 mx-auto mb-2 text-muted-foreground group-hover:text-primary transition-colors"
+              style="--tw-text-opacity: 1"
+            ></i>
+            <p class="font-semibold text-sm">Laptops</p>
+          </a>
+          <a
+            href="shop.html?category=phone"
+            class="uk-card uk-card-body text-center group no-underline text-foreground hover:shadow-lg transition-shadow"
+          >
+            <i
+              data-lucide="smartphone"
+              class="h-8 w-8 mx-auto mb-2 text-muted-foreground group-hover:text-primary transition-colors"
+            ></i>
+            <p class="font-semibold text-sm">Phones</p>
+          </a>
+          <a
+            href="shop.html?category=audio"
+            class="uk-card uk-card-body text-center group no-underline text-foreground hover:shadow-lg transition-shadow"
+          >
+            <i
+              data-lucide="headphones"
+              class="h-8 w-8 mx-auto mb-2 text-muted-foreground group-hover:text-primary transition-colors"
+            ></i>
+            <p class="font-semibold text-sm">Audio</p>
+          </a>
+          <a
+            href="shop.html?category=accessory"
+            class="uk-card uk-card-body text-center group no-underline text-foreground hover:shadow-lg transition-shadow"
+          >
+            <i
+              data-lucide="mouse"
+              class="h-8 w-8 mx-auto mb-2 text-muted-foreground group-hover:text-primary transition-colors"
+            ></i>
+            <p class="font-semibold text-sm">Accessories</p>
+          </a>
+        </div>
+      </section>
+
+      <!-- Featured Products -->
+      <section id="featured" class="uk-container pb-16">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">Featured Products</h2>
+          <a
+            href="shop.html"
+            class="text-sm font-medium hover:underline"
+            style="color: hsl(var(--primary))"
+            >View All →</a
+          >
+        </div>
+        <div id="product-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <!-- Products loaded by JS -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Franken UI JS -->
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/js/core.iife.js"
+    ></script>
+    <!-- App JS -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+      // Load featured products (random 8)
+      document.addEventListener("DOMContentLoaded", async () => {
+        renderProductSkeleton("product-grid", 4);
+        try {
+          const products = await apiGet("/rest/v1/products?select=*&limit=8");
+          renderProducts(products, "product-grid");
+        } catch (e) {
+          console.error("Failed to load featured products:", e);
+          document.getElementById("product-grid").innerHTML =
+            '<p class="col-span-full text-center text-muted-foreground py-8">Could not load products. Please try again later.</p>';
+        }
+      });
+    </script>
+  </body>
+</html>

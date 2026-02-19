@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>byteStore - Product Details</title>
+    <meta name="description" content="View product details and add to cart." />
+    <link rel="preconnect" href="https://rsms.me/" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              border: "hsl(var(--border))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: "hsl(var(--primary))",
+              "primary-foreground": "hsl(var(--primary-foreground))",
+              muted: "hsl(var(--muted))",
+              "muted-foreground": "hsl(var(--muted-foreground))",
+              card: "hsl(var(--card))",
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <!-- Marked.js for rendering markdown product descriptions -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+      if (localStorage.getItem("theme") === "dark")
+        document.documentElement.classList.add("dark");
+      document.documentElement.classList.add(
+        "uk-theme-zinc",
+        "uk-radii-md",
+        "uk-shadows-sm",
+        "uk-font-sm",
+      );
+    </script>
+  </head>
+  <body class="bg-background text-foreground">
+    <main class="uk-container py-8">
+      <!-- Breadcrumb -->
+      <nav class="mb-6">
+        <ul class="flex items-center gap-2 text-sm text-muted-foreground">
+          <li><a href="index.html" class="hover:text-foreground">Home</a></li>
+          <li>/</li>
+          <li><a href="shop.html" class="hover:text-foreground">Shop</a></li>
+          <li>/</li>
+          <li class="text-foreground" id="breadcrumb-name">Product</li>
+        </ul>
+      </nav>
+
+      <!-- Product Detail -->
+      <div id="product-detail">
+        <!-- Loading skeleton -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div
+            class="skeleton"
+            style="height: 350px; border-radius: 0.5rem"
+          ></div>
+          <div>
+            <div
+              class="skeleton"
+              style="height: 14px; width: 80px; margin-bottom: 12px"
+            ></div>
+            <div
+              class="skeleton"
+              style="height: 28px; width: 100%; margin-bottom: 8px"
+            ></div>
+            <div
+              class="skeleton"
+              style="height: 28px; width: 60%; margin-bottom: 20px"
+            ></div>
+            <div
+              class="skeleton"
+              style="height: 36px; width: 150px; margin-bottom: 24px"
+            ></div>
+            <div
+              class="skeleton"
+              style="
+                height: 44px;
+                width: 100%;
+                border-radius: 8px;
+                margin-bottom: 32px;
+              "
+            ></div>
+            <div
+              class="skeleton"
+              style="height: 14px; width: 100%; margin-bottom: 6px"
+            ></div>
+            <div
+              class="skeleton"
+              style="height: 14px; width: 90%; margin-bottom: 6px"
+            ></div>
+            <div class="skeleton" style="height: 14px; width: 75%"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/js/core.iife.js"
+    ></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const id = getParam("id");
+        if (!id) {
+          document.getElementById("product-detail").innerHTML =
+            '<div class="empty-state"><p class="text-lg font-medium">Product not found</p><a href="shop.html" class="uk-btn uk-btn-primary uk-btn-sm mt-4">Back to Shop</a></div>';
+          return;
+        }
+
+        try {
+          const products = await apiGet(
+            `/rest/v1/products?id=eq.${id}&select=*`,
+          );
+          if (!products || products.length === 0) throw new Error("Not found");
+
+          const product = products[0];
+          document.title = `byteStore - ${product.name}`;
+          document.getElementById("breadcrumb-name").textContent = product.name;
+          renderProductDetail(product);
+        } catch (e) {
+          console.error("Failed to load product:", e);
+          document.getElementById("product-detail").innerHTML =
+            '<div class="empty-state"><i data-lucide="alert-circle" class="h-10 w-10 mx-auto"></i><p class="mt-2 text-lg font-medium">Could not load product</p><a href="shop.html" class="uk-btn uk-btn-primary uk-btn-sm mt-4">Back to Shop</a></div>';
+          if (typeof lucide !== "undefined") lucide.createIcons();
+        }
+      });
+    </script>
+  </body>
+</html>

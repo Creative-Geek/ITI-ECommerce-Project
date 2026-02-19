@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>byteStore - About Us</title>
+    <meta
+      name="description"
+      content="Learn about byteStore — your tech destination in Egypt."
+    />
+    <link rel="preconnect" href="https://rsms.me/" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              border: "hsl(var(--border))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: "hsl(var(--primary))",
+              "primary-foreground": "hsl(var(--primary-foreground))",
+              muted: "hsl(var(--muted))",
+              "muted-foreground": "hsl(var(--muted-foreground))",
+              card: "hsl(var(--card))",
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script>
+      if (localStorage.getItem("theme") === "dark")
+        document.documentElement.classList.add("dark");
+      document.documentElement.classList.add(
+        "uk-theme-zinc",
+        "uk-radii-md",
+        "uk-shadows-sm",
+        "uk-font-sm",
+      );
+    </script>
+  </head>
+  <body class="bg-background text-foreground">
+    <main>
+      <!-- Hero -->
+      <section class="hero-section py-16">
+        <div class="uk-container relative z-10 text-center">
+          <h1 class="text-4xl font-extrabold tracking-tight mb-4">
+            About <span style="color: hsl(var(--primary))">byteStore</span>
+          </h1>
+          <p class="text-lg text-muted-foreground max-w-lg mx-auto">
+            Your trusted destination for premium tech products in Egypt.
+          </p>
+        </div>
+      </section>
+
+      <!-- Content -->
+      <section class="uk-container py-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-16">
+          <div>
+            <h2 class="text-2xl font-bold mb-4">Our Story</h2>
+            <p class="text-muted-foreground mb-3">
+              byteStore was founded with a simple mission: to make quality
+              technology accessible to everyone in Egypt. We believe that the
+              right tech can transform how you work, learn, and create.
+            </p>
+            <p class="text-muted-foreground">
+              From the latest laptops and smartphones to premium audio gear and
+              accessories, we curate only the best products from trusted brands
+              — all available at competitive prices.
+            </p>
+          </div>
+          <div class="uk-card uk-card-body p-8 text-center">
+            <div class="grid grid-cols-2 gap-6">
+              <div>
+                <p
+                  class="text-3xl font-bold"
+                  style="color: hsl(var(--primary))"
+                >
+                  128+
+                </p>
+                <p class="text-sm text-muted-foreground mt-1">Products</p>
+              </div>
+              <div>
+                <p
+                  class="text-3xl font-bold"
+                  style="color: hsl(var(--primary))"
+                >
+                  4
+                </p>
+                <p class="text-sm text-muted-foreground mt-1">Categories</p>
+              </div>
+              <div>
+                <p
+                  class="text-3xl font-bold"
+                  style="color: hsl(var(--primary))"
+                >
+                  24/7
+                </p>
+                <p class="text-sm text-muted-foreground mt-1">Support</p>
+              </div>
+              <div>
+                <p
+                  class="text-3xl font-bold"
+                  style="color: hsl(var(--primary))"
+                >
+                  Free
+                </p>
+                <p class="text-sm text-muted-foreground mt-1">Shipping</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Values -->
+        <div class="mb-16">
+          <h2 class="text-2xl font-bold text-center mb-8">Why Choose Us</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="uk-card uk-card-body text-center">
+              <i
+                data-lucide="shield-check"
+                class="h-10 w-10 mx-auto mb-3"
+                style="color: hsl(var(--primary))"
+              ></i>
+              <h3 class="font-semibold mb-2">Authentic Products</h3>
+              <p class="text-sm text-muted-foreground">
+                100% genuine products with manufacturer warranty. No knock-offs,
+                ever.
+              </p>
+            </div>
+            <div class="uk-card uk-card-body text-center">
+              <i
+                data-lucide="truck"
+                class="h-10 w-10 mx-auto mb-3"
+                style="color: hsl(var(--primary))"
+              ></i>
+              <h3 class="font-semibold mb-2">Fast Delivery</h3>
+              <p class="text-sm text-muted-foreground">
+                Free shipping across Egypt with tracking. Most orders arrive in
+                2-5 business days.
+              </p>
+            </div>
+            <div class="uk-card uk-card-body text-center">
+              <i
+                data-lucide="headset"
+                class="h-10 w-10 mx-auto mb-3"
+                style="color: hsl(var(--primary))"
+              ></i>
+              <h3 class="font-semibold mb-2">Expert Support</h3>
+              <p class="text-sm text-muted-foreground">
+                Our tech-savvy team is here to help you find the perfect product
+                for your needs.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Built With -->
+        <div class="uk-card uk-card-body text-center">
+          <h2 class="text-xl font-bold mb-3">Built With</h2>
+          <p class="text-sm text-muted-foreground mb-4">
+            This project was built as part of the ITI curriculum using modern
+            web technologies.
+          </p>
+          <div class="flex flex-wrap justify-center gap-3 text-xs">
+            <span
+              class="border rounded-full px-3 py-1"
+              style="border-color: hsl(var(--border))"
+              >HTML5</span
+            >
+            <span
+              class="border rounded-full px-3 py-1"
+              style="border-color: hsl(var(--border))"
+              >CSS3</span
+            >
+            <span
+              class="border rounded-full px-3 py-1"
+              style="border-color: hsl(var(--border))"
+              >Vanilla JavaScript</span
+            >
+            <span
+              class="border rounded-full px-3 py-1"
+              style="border-color: hsl(var(--border))"
+              >Supabase</span
+            >
+            <span
+              class="border rounded-full px-3 py-1"
+              style="border-color: hsl(var(--border))"
+              >Franken UI</span
+            >
+            <span
+              class="border rounded-full px-3 py-1"
+              style="border-color: hsl(var(--border))"
+              >Tailwind CSS</span
+            >
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/js/core.iife.js"
+    ></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/ui.js"></script>
+  </body>
+</html>

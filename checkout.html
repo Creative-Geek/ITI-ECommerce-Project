@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>byteStore - Checkout</title>
+    <meta name="description" content="Complete your order." />
+    <link rel="preconnect" href="https://rsms.me/" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              border: "hsl(var(--border))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: "hsl(var(--primary))",
+              "primary-foreground": "hsl(var(--primary-foreground))",
+              muted: "hsl(var(--muted))",
+              "muted-foreground": "hsl(var(--muted-foreground))",
+              card: "hsl(var(--card))",
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script>
+      if (localStorage.getItem("theme") === "dark")
+        document.documentElement.classList.add("dark");
+      document.documentElement.classList.add(
+        "uk-theme-zinc",
+        "uk-radii-md",
+        "uk-shadows-sm",
+        "uk-font-sm",
+      );
+    </script>
+  </head>
+  <body class="bg-background text-foreground">
+    <main class="uk-container py-8">
+      <h1 class="text-3xl font-bold mb-6">Checkout</h1>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Shipping Form -->
+        <div class="lg:col-span-2">
+          <form
+            id="checkoutForm"
+            class="uk-card uk-card-body space-y-4"
+            novalidate
+          >
+            <h3 class="font-semibold text-lg mb-2">Shipping Information</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="uk-form-label" for="firstName"
+                  >First Name *</label
+                >
+                <input
+                  class="uk-input mt-1"
+                  type="text"
+                  id="firstName"
+                  required
+                />
+                <p
+                  class="text-xs text-destructive mt-1 hidden"
+                  id="firstName-error"
+                >
+                  First name is required
+                </p>
+              </div>
+              <div>
+                <label class="uk-form-label" for="lastName">Last Name *</label>
+                <input
+                  class="uk-input mt-1"
+                  type="text"
+                  id="lastName"
+                  required
+                />
+                <p
+                  class="text-xs text-destructive mt-1 hidden"
+                  id="lastName-error"
+                >
+                  Last name is required
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label class="uk-form-label" for="email">Email *</label>
+              <input class="uk-input mt-1" type="email" id="email" required />
+              <p class="text-xs text-destructive mt-1 hidden" id="email-error">
+                Valid email is required
+              </p>
+            </div>
+
+            <div>
+              <label class="uk-form-label" for="phone">Phone *</label>
+              <input
+                class="uk-input mt-1"
+                type="tel"
+                id="phone"
+                placeholder="01xxxxxxxxx"
+                required
+              />
+              <p class="text-xs text-destructive mt-1 hidden" id="phone-error">
+                Phone number is required
+              </p>
+            </div>
+
+            <div>
+              <label class="uk-form-label" for="address">Address *</label>
+              <input class="uk-input mt-1" type="text" id="address" required />
+              <p
+                class="text-xs text-destructive mt-1 hidden"
+                id="address-error"
+              >
+                Address is required
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="uk-form-label" for="city">City *</label>
+                <input class="uk-input mt-1" type="text" id="city" required />
+                <p class="text-xs text-destructive mt-1 hidden" id="city-error">
+                  City is required
+                </p>
+              </div>
+              <div>
+                <label class="uk-form-label" for="governorate"
+                  >Governorate</label
+                >
+                <select class="uk-select mt-1" id="governorate">
+                  <option value="">Select Governorate</option>
+                  <option>Cairo</option>
+                  <option>Giza</option>
+                  <option>Alexandria</option>
+                  <option>Dakahlia</option>
+                  <option>Sharqia</option>
+                  <option>Qalyubia</option>
+                  <option>Gharbia</option>
+                  <option>Menoufia</option>
+                  <option>Beheira</option>
+                  <option>Kafr El Sheikh</option>
+                  <option>Damietta</option>
+                  <option>Port Said</option>
+                  <option>Ismailia</option>
+                  <option>Suez</option>
+                  <option>Red Sea</option>
+                  <option>Aswan</option>
+                  <option>Luxor</option>
+                  <option>Sohag</option>
+                  <option>Assiut</option>
+                  <option>Minya</option>
+                  <option>Beni Suef</option>
+                  <option>Fayoum</option>
+                  <option>Matrouh</option>
+                  <option>New Valley</option>
+                  <option>North Sinai</option>
+                  <option>South Sinai</option>
+                  <option>Qena</option>
+                </select>
+              </div>
+            </div>
+
+            <div
+              class="border-t pt-4 mt-4"
+              style="border-color: hsl(var(--border) / 0.5)"
+            >
+              <label class="flex items-center gap-2 text-sm">
+                <input type="checkbox" class="uk-checkbox" id="cod" checked />
+                Cash on Delivery
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              id="place-order-btn"
+              class="uk-btn uk-btn-primary w-full uk-btn-md mt-4"
+            >
+              <i data-lucide="lock" class="h-4 w-4 mr-2"></i> Place Order
+            </button>
+          </form>
+        </div>
+
+        <!-- Order Summary -->
+        <div>
+          <div class="uk-card uk-card-body">
+            <h3 class="font-semibold text-lg mb-4">Order Summary</h3>
+            <div id="checkout-items">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/js/core.iife.js"
+    ></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Auth guard
+        requireAuth();
+
+        const cart = getCart();
+        if (cart.length === 0) {
+          window.location.href = "cart.html";
+          return;
+        }
+
+        // Render order summary
+        const itemsEl = document.getElementById("checkout-items");
+        itemsEl.innerHTML =
+          cart
+            .map(
+              (item) => `
+            <div class="flex justify-between items-center mb-3 text-sm">
+              <div class="flex-1 min-w-0">
+                <p class="truncate font-medium">${item.name}</p>
+                <p class="text-xs text-muted-foreground">Qty: ${item.quantity}</p>
+              </div>
+              <span class="font-semibold ml-3">EGP ${(item.price * item.quantity).toLocaleString()}</span>
+            </div>`,
+            )
+            .join("") +
+          `<div class="border-t mt-3 pt-3" style="border-color:hsl(var(--border)/0.5)">
+            <div class="flex justify-between font-bold text-lg">
+              <span>Total</span>
+              <span style="color:hsl(var(--primary))">EGP ${getCartTotal().toLocaleString()}</span>
+            </div>
+          </div>`;
+
+        // Pre-fill email if logged in
+        const user = getCurrentUser();
+        if (user) {
+          document.getElementById("email").value = user.email;
+        }
+
+        // Requirement: Form Validation + Event Handling
+        document
+          .getElementById("checkoutForm")
+          .addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!validateCheckout()) return;
+
+            const btn = document.getElementById("place-order-btn");
+            btn.disabled = true;
+            btn.innerHTML =
+              '<i data-lucide="loader" class="h-4 w-4 mr-2 animate-spin"></i> Processing...';
+
+            try {
+              const token = localStorage.getItem("access_token");
+              if (!token) {
+                showToast("Please log in to place an order", "error");
+                setTimeout(() => (window.location.href = "login.html"), 1500);
+                return;
+              }
+
+              const orderData = {
+                user_id: user.id,
+                total_amount: getCartTotal(),
+                status: "pending",
+                shipping_address: `${document.getElementById("address").value}, ${document.getElementById("city").value}`,
+              };
+
+              const order = await apiPost("/rest/v1/orders", orderData, token, {
+                returnData: true,
+              });
+
+              // Insert order items
+              const orderItems = cart.map((item) => ({
+                order_id: order.id,
+                product_id: item.id,
+                quantity: item.quantity,
+                unit_price: item.price,
+              }));
+
+              for (const oi of orderItems) {
+                await apiPost("/rest/v1/order_items", oi, token);
+              }
+
+              // Clear cart
+              localStorage.removeItem("cart");
+              updateCartBadge();
+
+              showToast("Order placed successfully! 🎉", "success");
+              setTimeout(() => (window.location.href = "profile.html"), 2000);
+            } catch (err) {
+              console.error("Order failed:", err);
+              showToast("Order failed: " + err.message, "error");
+              btn.disabled = false;
+              btn.innerHTML =
+                '<i data-lucide="lock" class="h-4 w-4 mr-2"></i> Place Order';
+              if (typeof lucide !== "undefined") lucide.createIcons();
+            }
+          });
+      });
+
+      function validateCheckout() {
+        let valid = true;
+        const fields = [
+          "firstName",
+          "lastName",
+          "email",
+          "phone",
+          "address",
+          "city",
+        ];
+
+        fields.forEach((field) => {
+          const input = document.getElementById(field);
+          const error = document.getElementById(field + "-error");
+          if (!input.value.trim()) {
+            error?.classList.remove("hidden");
+            valid = false;
+          } else {
+            error?.classList.add("hidden");
+          }
+        });
+
+        // Email validation
+        const emailInput = document.getElementById("email");
+        const emailError = document.getElementById("email-error");
+        if (emailInput.value && !/\S+@\S+\.\S+/.test(emailInput.value)) {
+          emailError?.classList.remove("hidden");
+          valid = false;
+        }
+
+        if (!valid) showToast("Please fill in all required fields", "error");
+        return valid;
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>byteStore - Shop</title>
+    <meta
+      name="description"
+      content="Browse all tech products — laptops, phones, audio, accessories."
+    />
+    <link rel="preconnect" href="https://rsms.me/" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              border: "hsl(var(--border))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: "hsl(var(--primary))",
+              "primary-foreground": "hsl(var(--primary-foreground))",
+              muted: "hsl(var(--muted))",
+              "muted-foreground": "hsl(var(--muted-foreground))",
+              card: "hsl(var(--card))",
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script>
+      if (localStorage.getItem("theme") === "dark")
+        document.documentElement.classList.add("dark");
+      document.documentElement.classList.add(
+        "uk-theme-zinc",
+        "uk-radii-md",
+        "uk-shadows-sm",
+        "uk-font-sm",
+      );
+    </script>
+  </head>
+  <body class="bg-background text-foreground">
+    <main class="uk-container py-8">
+      <!-- Page Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-2">Shop</h1>
+        <p class="text-muted-foreground">
+          Discover our full range of tech products.
+        </p>
+      </div>
+
+      <!-- Search + Filters -->
+      <div
+        class="flex flex-col md:flex-row gap-4 mb-6 items-start md:items-center"
+      >
+        <!-- Search -->
+        <div class="relative flex-1 w-full">
+          <i
+            data-lucide="search"
+            class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+          ></i>
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Search products..."
+            class="uk-input pl-10 w-full"
+            oninput="handleSearch()"
+          />
+        </div>
+
+        <!-- Sort -->
+        <select
+          id="sort-select"
+          class="uk-select w-full md:w-48"
+          onchange="handleSort()"
+        >
+          <option value="default">Sort by</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="name-asc">Name: A-Z</option>
+        </select>
+      </div>
+
+      <!-- Category Pills -->
+      <div class="flex flex-wrap gap-2 mb-6" id="category-pills">
+        <button class="category-pill active" onclick="filterCategory('all')">
+          All
+        </button>
+        <button class="category-pill" onclick="filterCategory('laptop')">
+          Laptops
+        </button>
+        <button class="category-pill" onclick="filterCategory('phone')">
+          Phones
+        </button>
+        <button class="category-pill" onclick="filterCategory('audio')">
+          Audio
+        </button>
+        <button class="category-pill" onclick="filterCategory('accessory')">
+          Accessories
+        </button>
+      </div>
+
+      <!-- Results count -->
+      <p class="text-sm text-muted-foreground mb-4" id="results-count"></p>
+
+      <!-- Product Grid -->
+      <div
+        id="product-grid"
+        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+      >
+        <!-- Products loaded by JS -->
+      </div>
+    </main>
+
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/js/core.iife.js"
+    ></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+      let allProducts = [];
+      let activeCategory = "all";
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        // Check for category param from URL (e.g., shop.html?category=laptop)
+        const urlCategory = getParam("category");
+        if (urlCategory) {
+          activeCategory = urlCategory;
+          // Update active pill
+          document.querySelectorAll(".category-pill").forEach((pill) => {
+            pill.classList.toggle(
+              "active",
+              pill.textContent.toLowerCase().includes(urlCategory) ||
+                (urlCategory === "all" && pill.textContent === "All"),
+            );
+          });
+        }
+
+        renderProductSkeleton("product-grid", 8);
+        try {
+          allProducts = await apiGet("/rest/v1/products?select=*&order=id");
+          applyFilters();
+        } catch (e) {
+          console.error("Failed to load products:", e);
+          document.getElementById("product-grid").innerHTML =
+            '<p class="col-span-full text-center text-muted-foreground py-8">Could not load products.</p>';
+        }
+      });
+
+      function filterCategory(cat) {
+        activeCategory = cat;
+        // Update pills
+        document.querySelectorAll(".category-pill").forEach((pill) => {
+          pill.classList.remove("active");
+        });
+        event.target.classList.add("active");
+        applyFilters();
+      }
+
+      function handleSearch() {
+        applyFilters();
+      }
+
+      function handleSort() {
+        applyFilters();
+      }
+
+      function applyFilters() {
+        let products = [...allProducts];
+        const query = document
+          .getElementById("search-input")
+          .value.toLowerCase()
+          .trim();
+        const sort = document.getElementById("sort-select").value;
+
+        // Requirement: Array Method — .filter() for category/search filtering
+        if (activeCategory !== "all") {
+          products = products.filter((p) => p.category === activeCategory);
+        }
+        if (query) {
+          products = products.filter(
+            (p) =>
+              p.name.toLowerCase().includes(query) ||
+              (p.description && p.description.toLowerCase().includes(query)),
+          );
+        }
+
+        // Sort
+        if (sort === "price-asc") products.sort((a, b) => a.price - b.price);
+        if (sort === "price-desc") products.sort((a, b) => b.price - a.price);
+        if (sort === "name-asc")
+          products.sort((a, b) => a.name.localeCompare(b.name));
+
+        // Results count
+        document.getElementById("results-count").textContent =
+          `${products.length} product${products.length !== 1 ? "s" : ""} found`;
+
+        renderProducts(products, "product-grid");
+      }
+    </script>
+  </body>
+</html>

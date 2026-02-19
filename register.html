@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>byteStore - Sign Up</title>
+    <meta name="description" content="Create your byteStore account." />
+    <link rel="preconnect" href="https://rsms.me/" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              border: "hsl(var(--border))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: "hsl(var(--primary))",
+              "primary-foreground": "hsl(var(--primary-foreground))",
+              muted: "hsl(var(--muted))",
+              "muted-foreground": "hsl(var(--muted-foreground))",
+              card: "hsl(var(--card))",
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script>
+      if (localStorage.getItem("theme") === "dark")
+        document.documentElement.classList.add("dark");
+      document.documentElement.classList.add(
+        "uk-theme-zinc",
+        "uk-radii-md",
+        "uk-shadows-sm",
+        "uk-font-sm",
+      );
+    </script>
+  </head>
+  <body class="bg-background text-foreground">
+    <main class="uk-container py-16">
+      <div class="auth-card">
+        <div class="uk-card uk-card-body">
+          <div class="text-center mb-6">
+            <div class="logo-text text-foreground text-2xl mb-2">
+              byte<span style="color: hsl(var(--primary))">Store</span>
+            </div>
+            <h1 class="text-xl font-bold">Create an account</h1>
+            <p class="text-sm text-muted-foreground mt-1">
+              Get started with byteStore
+            </p>
+          </div>
+
+          <form id="registerForm" class="space-y-4" novalidate>
+            <div>
+              <label class="uk-form-label" for="reg-email">Email</label>
+              <input
+                class="uk-input mt-1"
+                type="email"
+                id="reg-email"
+                placeholder="you@example.com"
+                required
+              />
+              <p
+                class="text-xs text-destructive mt-1 hidden"
+                id="reg-email-error"
+              >
+                Valid email is required
+              </p>
+            </div>
+
+            <div>
+              <label class="uk-form-label" for="reg-password">Password</label>
+              <input
+                class="uk-input mt-1"
+                type="password"
+                id="reg-password"
+                placeholder="Min 6 characters"
+                required
+                minlength="6"
+              />
+              <p
+                class="text-xs text-destructive mt-1 hidden"
+                id="reg-password-error"
+              >
+                Password must be at least 6 characters
+              </p>
+            </div>
+
+            <div>
+              <label class="uk-form-label" for="reg-confirm"
+                >Confirm Password</label
+              >
+              <input
+                class="uk-input mt-1"
+                type="password"
+                id="reg-confirm"
+                placeholder="••••••••"
+                required
+              />
+              <p
+                class="text-xs text-destructive mt-1 hidden"
+                id="reg-confirm-error"
+              >
+                Passwords do not match
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              id="register-btn"
+              class="uk-btn uk-btn-primary w-full"
+            >
+              Create Account
+            </button>
+          </form>
+
+          <p class="text-center text-sm text-muted-foreground mt-4">
+            Already have an account?
+            <a
+              href="login.html"
+              class="font-medium"
+              style="color: hsl(var(--primary))"
+              >Sign In</a
+            >
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/js/core.iife.js"
+    ></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Redirect if already logged in
+        if (getCurrentUser()) {
+          window.location.href = "index.html";
+          return;
+        }
+
+        document
+          .getElementById("registerForm")
+          .addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById("reg-email").value.trim();
+            const password = document.getElementById("reg-password").value;
+            const confirm = document.getElementById("reg-confirm").value;
+
+            let valid = true;
+
+            if (!email || !/\S+@\S+\.\S+/.test(email)) {
+              document
+                .getElementById("reg-email-error")
+                .classList.remove("hidden");
+              valid = false;
+            } else {
+              document
+                .getElementById("reg-email-error")
+                .classList.add("hidden");
+            }
+
+            if (!password || password.length < 6) {
+              document
+                .getElementById("reg-password-error")
+                .classList.remove("hidden");
+              valid = false;
+            } else {
+              document
+                .getElementById("reg-password-error")
+                .classList.add("hidden");
+            }
+
+            if (password !== confirm) {
+              document
+                .getElementById("reg-confirm-error")
+                .classList.remove("hidden");
+              valid = false;
+            } else {
+              document
+                .getElementById("reg-confirm-error")
+                .classList.add("hidden");
+            }
+
+            if (!valid) return;
+
+            const btn = document.getElementById("register-btn");
+            btn.disabled = true;
+            btn.textContent = "Creating account...";
+
+            await register(email, password);
+
+            btn.disabled = false;
+            btn.textContent = "Create Account";
+          });
+      });
+    </script>
+  </body>
+</html>

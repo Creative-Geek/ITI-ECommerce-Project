@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>byteStore - My Profile</title>
+    <meta name="description" content="View your profile and order history." />
+    <link rel="preconnect" href="https://rsms.me/" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              border: "hsl(var(--border))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: "hsl(var(--primary))",
+              "primary-foreground": "hsl(var(--primary-foreground))",
+              muted: "hsl(var(--muted))",
+              "muted-foreground": "hsl(var(--muted-foreground))",
+              card: "hsl(var(--card))",
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script>
+      if (localStorage.getItem("theme") === "dark")
+        document.documentElement.classList.add("dark");
+      document.documentElement.classList.add(
+        "uk-theme-zinc",
+        "uk-radii-md",
+        "uk-shadows-sm",
+        "uk-font-sm",
+      );
+    </script>
+  </head>
+  <body class="bg-background text-foreground">
+    <main class="uk-container py-8">
+      <h1 class="text-3xl font-bold mb-6">My Profile</h1>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- User Info Card -->
+        <div>
+          <div class="uk-card uk-card-body text-center">
+            <div
+              class="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold"
+              style="
+                background: hsl(var(--accent));
+                color: hsl(var(--accent-foreground));
+              "
+            >
+              <span id="user-avatar">?</span>
+            </div>
+            <h2 class="font-semibold text-lg" id="user-display-email">
+              Loading...
+            </h2>
+            <p class="text-sm text-muted-foreground mt-1" id="user-created">
+              Member
+            </p>
+
+            <div
+              class="border-t mt-4 pt-4"
+              style="border-color: hsl(var(--border) / 0.5)"
+            >
+              <button
+                onclick="logout()"
+                class="uk-btn uk-btn-destructive uk-btn-sm w-full"
+              >
+                <i data-lucide="log-out" class="h-4 w-4 mr-2"></i> Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order History -->
+        <div class="lg:col-span-2">
+          <h2 class="text-xl font-semibold mb-4">Order History</h2>
+          <div id="order-history">
+            <div
+              class="skeleton"
+              style="height: 80px; margin-bottom: 12px; border-radius: 8px"
+            ></div>
+            <div
+              class="skeleton"
+              style="height: 80px; margin-bottom: 12px; border-radius: 8px"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/js/core.iife.js"
+    ></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        requireAuth();
+
+        const user = getCurrentUser();
+        if (user) {
+          document.getElementById("user-avatar").textContent = user.email
+            .charAt(0)
+            .toUpperCase();
+          document.getElementById("user-display-email").textContent =
+            user.email;
+          document.getElementById("user-created").textContent =
+            `Member since ${new Date(user.created_at || Date.now()).toLocaleDateString("en-EG", { year: "numeric", month: "long" })}`;
+        }
+
+        // Load orders
+        try {
+          const token = localStorage.getItem("access_token");
+          const orders = await apiGet(
+            `/rest/v1/orders?user_id=eq.${user.id}&select=*&order=created_at.desc`,
+            token,
+          );
+          renderOrderHistory(orders);
+        } catch (e) {
+          console.error("Failed to load orders:", e);
+          document.getElementById("order-history").innerHTML =
+            '<p class="text-sm text-muted-foreground">Could not load order history.</p>';
+        }
+      });
+    </script>
+  </body>
+</html>
