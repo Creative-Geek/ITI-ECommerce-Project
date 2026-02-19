@@ -539,14 +539,15 @@ async function loadRelatedProducts(productId, category) {
       .join("");
 
     if (typeof lucide !== "undefined") lucide.createIcons();
-    if (typeof refreshScrollAnimations === "function") refreshScrollAnimations();
+    if (typeof refreshScrollAnimations === "function")
+      refreshScrollAnimations();
   } catch (e) {
     console.error("Failed to load related products:", e);
     document.getElementById("related-products").style.display = "none";
   }
 }
 
-
+function generateStarHTML(rating) {
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 >= 0.5;
   let html = "";
