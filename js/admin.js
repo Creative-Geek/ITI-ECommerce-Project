@@ -207,6 +207,80 @@ function closeModal() {
   editingProductId = null;
 }
 
+// ════════════════════════════════════════════════════════════════
+// §4b · IMAGE UPLOAD TO SUPABASE STORAGE
+// ════════════════════════════════════════════════════════════════
+
+async function uploadProductImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const btn = document.getElementById("upload-image-btn");
+  const statusEl = document.getElementById("upload-status");
+
+  // Show uploading state
+  btn.disabled = true;
+  btn.innerHTML =
+    '<i data-lucide="loader-2" class="h-4 w-4 inline animate-spin mr-1"></i> Uploading...';
+  statusEl.textContent = "Uploading…";
+  statusEl.className = "text-xs text-muted-foreground mt-1";
+  statusEl.classList.remove("hidden");
+  if (typeof lucide !== "undefined") lucide.createIcons();
+
+  try {
+    const token = localStorage.getItem("access_token");
+    if (!token) throw new Error("Not authenticated — please log in again.");
+
+    // Build a unique filename: timestamp + original name
+    const ext = file.name.split(".").pop();
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const bucket = "product-images"; // Supabase storage bucket name
+
+    const uploadRes = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/${bucket}/${filename}`,
+      {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${token}`,
+          "Content-Type": file.type,
+          "x-upsert": "false",
+        },
+        body: file,
+      },
+    );
+
+    if (!uploadRes.ok) {
+      let errMsg = `Upload failed (${uploadRes.status})`;
+      try {
+        const err = await uploadRes.json();
+        errMsg = err.error || err.message || errMsg;
+      } catch (_) {}
+      throw new Error(errMsg);
+    }
+
+    // Build the public URL
+    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${filename}`;
+    document.getElementById("pf-image").value = publicUrl;
+
+    statusEl.textContent = "✓ Image uploaded successfully!";
+    statusEl.className = "text-xs text-green-500 mt-1";
+    showToast("Image uploaded!", "success");
+  } catch (err) {
+    console.error("Image upload failed:", err);
+    statusEl.textContent = `✗ Upload failed: ${err.message}`;
+    statusEl.className = "text-xs text-red-500 mt-1";
+    showToast("Image upload failed: " + err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML =
+      '<i data-lucide="upload" class="h-4 w-4 inline mr-1"></i> Upload Image';
+    // Reset file input so the same file can be re-selected after failure
+    input.value = "";
+    if (typeof lucide !== "undefined") lucide.createIcons();
+  }
+}
+
 async function saveProduct(e) {
   e.preventDefault();
 

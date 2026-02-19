@@ -230,13 +230,35 @@
           </div>
 
           <div>
-            <label class="text-sm font-medium mb-1 block">Image URL</label>
+            <label class="text-sm font-medium mb-1 block">Product Image</label>
+            <!-- Hidden file picker -->
             <input
-              type="url"
-              id="pf-image"
-              class="uk-input w-full"
-              placeholder="https://..."
+              type="file"
+              id="pf-image-file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              class="hidden"
+              onchange="uploadProductImage(this)"
             />
+            <div class="flex gap-2 items-center">
+              <button
+                type="button"
+                id="upload-image-btn"
+                onclick="document.getElementById('pf-image-file').click()"
+                class="uk-btn uk-btn-default uk-btn-sm shrink-0 flex items-center gap-1.5"
+              >
+                <i data-lucide="upload" class="h-4 w-4"></i> Upload Image
+              </button>
+              <input
+                type="url"
+                id="pf-image"
+                class="uk-input w-full"
+                placeholder="https://… (auto-filled after upload)"
+              />
+            </div>
+            <p
+              id="upload-status"
+              class="text-xs text-muted-foreground mt-1 hidden"
+            ></p>
           </div>
 
           <div>

@@ -87,7 +87,6 @@ function injectNavbar() {
           <a href="shop.html" class="nav-link ${currentPage === "shop.html" ? "active" : ""}">Shop</a>
           <a href="about.html" class="nav-link ${currentPage === "about.html" ? "active" : ""}">About</a>
           <a href="contact.html" class="nav-link ${currentPage === "contact.html" ? "active" : ""}">Contact</a>
-          ${typeof isAdmin === "function" && isAdmin() ? `<a href="admin.html" class="nav-link ${currentPage === "admin.html" ? "active" : ""}"><i data-lucide="shield" class="h-3.5 w-3.5 inline mr-1"></i>Admin</a>` : ""}
         </nav>
 
         <!-- Right Actions -->
@@ -129,7 +128,6 @@ function injectNavbar() {
         <a href="shop.html" class="nav-link ${currentPage === "shop.html" ? "active" : ""}">Shop</a>
         <a href="about.html" class="nav-link ${currentPage === "about.html" ? "active" : ""}">About</a>
         <a href="contact.html" class="nav-link ${currentPage === "contact.html" ? "active" : ""}">Contact</a>
-        ${typeof isAdmin === "function" && isAdmin() ? `<a href="admin.html" class="nav-link ${currentPage === "admin.html" ? "active" : ""}"><i data-lucide="shield" class="h-3.5 w-3.5 inline mr-1"></i>Admin</a>` : ""}
       </nav>
     </div>
   `;
@@ -168,11 +166,12 @@ function injectFooter() {
             <li><a href="profile.html" class="text-muted-foreground hover:text-foreground transition-colors">My Profile</a></li>
             <li><a href="cart.html" class="text-muted-foreground hover:text-foreground transition-colors">Cart</a></li>
             <li><a href="login.html" class="text-muted-foreground hover:text-foreground transition-colors">Sign In</a></li>
+            ${typeof isAdmin === "function" && isAdmin() ? `<li><a href="admin.html" class="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"><i data-lucide="shield" class="h-3.5 w-3.5"></i> Admin</a></li>` : ""}
           </ul>
         </div>
       </div>
       <div class="border-t mt-8 pt-6 text-center text-xs text-muted-foreground" style="border-color:hsl(var(--border)/0.5)">
-        © ${new Date().getFullYear()} byteStore. Built with ❤ for ITI.
+        © ${new Date().getFullYear()} byteStore. Built with ❤️ for ITI.
       </div>
     </div>
   `;
@@ -477,13 +476,15 @@ function renderCart() {
     .map(
       (item) => `
     <div class="uk-card uk-card-body flex flex-col sm:flex-row items-center gap-4 mb-3">
-      <img src="${item.image_url}" alt="${item.name}" class="h-20 w-20 object-contain rounded"
-           onerror="this.src='https://placehold.co/80x80/e2e8f0/94a3b8?text=No+Image'" />
-      <div class="flex-1 min-w-0">
-        <h4 class="font-semibold text-sm truncate text-foreground">${item.name}</h4>
-        <p class="text-xs text-muted-foreground">${item.category || ""}</p>
-        <p class="font-bold mt-1" style="color:hsl(var(--primary))">EGP ${Number(item.price).toLocaleString()}</p>
-      </div>
+      <a href="product.html?id=${item.id}" class="flex flex-col sm:flex-row items-center gap-4 flex-1 min-w-0 no-underline text-foreground hover:opacity-80 transition-opacity">
+        <img src="${item.image_url}" alt="${item.name}" class="h-20 w-20 object-contain rounded"
+             onerror="this.src='https://placehold.co/80x80/e2e8f0/94a3b8?text=No+Image'" />
+        <div class="flex-1 min-w-0">
+          <h4 class="font-semibold text-sm truncate text-foreground">${item.name}</h4>
+          <p class="text-xs text-muted-foreground">${item.category || ""}</p>
+          <p class="font-bold mt-1" style="color:hsl(var(--primary))">EGP ${Number(item.price).toLocaleString()}</p>
+        </div>
+      </a>
       <div class="flex items-center gap-2">
         <button class="qty-btn" onclick="updateQuantity(${item.id}, -1); renderCart();">−</button>
         <span class="w-8 text-center font-semibold">${item.quantity}</span>
