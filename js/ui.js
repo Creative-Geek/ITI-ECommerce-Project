@@ -398,12 +398,25 @@ function renderProductDetail(product) {
         <div class="text-sm text-muted-foreground">Loading reviews...</div>
       </div>
     </div>
+
+    <!-- Related Products Section -->
+    <div id="related-products" class="mt-12 border-t pt-8" style="border-color:hsl(var(--border)/0.5)">
+      <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
+        <i data-lucide="layout-grid" class="h-5 w-5"></i> Related Products
+      </h2>
+      <div id="related-products-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="text-sm text-muted-foreground col-span-full">Loading related products...</div>
+      </div>
+    </div>
   `;
 
   if (typeof lucide !== "undefined") lucide.createIcons();
 
   // Fetch and render reviews
   loadProductReviews(product.id);
+
+  // Fetch and render related products from the same category
+  loadRelatedProducts(product.id, product.category);
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -466,7 +479,74 @@ async function loadProductReviews(productId) {
   }
 }
 
-function generateStarHTML(rating) {
+// ════════════════════════════════════════════════════════════════
+// §8c · RELATED PRODUCTS
+// ════════════════════════════════════════════════════════════════
+
+async function loadRelatedProducts(productId, category) {
+  const container = document.getElementById("related-products-grid");
+  if (!container) return;
+
+  try {
+    // Fetch products in the same category, excluding the current product
+    const products = await apiGet(
+      `/rest/v1/products?category=eq.${encodeURIComponent(category)}&id=neq.${productId}&select=*`,
+    );
+
+    if (!products || products.length === 0) {
+      document.getElementById("related-products").style.display = "none";
+      return;
+    }
+
+    // Shuffle using Fisher-Yates and take up to 4
+    const shuffled = products.slice();
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const related = shuffled.slice(0, 4);
+
+    // Cache products for add-to-cart
+    related.forEach((p) => {
+      _productCache[p.id] = p;
+    });
+
+    container.innerHTML = related
+      .map(
+        (product) => `
+      <a href="product.html?id=${product.id}" class="uk-card product-card block no-underline text-foreground">
+        <div class="product-card-image overflow-hidden rounded-t-lg p-4 flex items-center justify-center" style="height:160px">
+          <img src="${product.image_url}" alt="${product.name}"
+               class="max-h-full max-w-full object-contain"
+               loading="lazy"
+               onerror="this.src='https://placehold.co/300x200/e2e8f0/94a3b8?text=No+Image'" />
+        </div>
+        <div class="uk-card-body p-4">
+          <p class="text-xs uppercase tracking-wide text-muted-foreground mb-1">${product.brand || product.category}</p>
+          <h3 class="uk-card-title text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem]">${product.name}</h3>
+          <div class="flex items-center justify-between mt-3">
+            <span class="text-base font-bold" style="color:hsl(var(--primary))">EGP ${Number(product.price).toLocaleString()}</span>
+            <button
+              onclick="event.preventDefault(); event.stopPropagation(); addToCartById(${product.id});"
+              class="uk-btn uk-btn-primary uk-btn-xs">
+              <i data-lucide="shopping-cart" class="h-3.5 w-3.5 mr-1"></i> Add
+            </button>
+          </div>
+        </div>
+      </a>
+    `,
+      )
+      .join("");
+
+    if (typeof lucide !== "undefined") lucide.createIcons();
+    if (typeof refreshScrollAnimations === "function") refreshScrollAnimations();
+  } catch (e) {
+    console.error("Failed to load related products:", e);
+    document.getElementById("related-products").style.display = "none";
+  }
+}
+
+
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 >= 0.5;
   let html = "";
