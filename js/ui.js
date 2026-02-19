@@ -109,8 +109,8 @@ function injectNavbar() {
 
         <!-- Right Actions -->
         <div class="flex items-center gap-3">
-          <!-- Theme Toggle -->
-          <button onclick="toggleTheme()" class="uk-btn uk-btn-ghost uk-btn-icon uk-btn-sm" aria-label="Toggle theme">
+          <!-- Theme Toggle (desktop only) -->
+          <button onclick="toggleTheme()" class="uk-btn uk-btn-ghost uk-btn-icon uk-btn-sm desktop-only" aria-label="Toggle theme">
             <i id="theme-icon" data-lucide="${getTheme() === "dark" ? "sun" : "moon"}" class="h-4 w-4"></i>
           </button>
 
@@ -120,13 +120,13 @@ function injectNavbar() {
             <span id="cart-badge" class="cart-badge" style="display:none;">0</span>
           </a>
 
-          <!-- Auth: Logged Out -->
-          <a href="login.html" id="nav-login" class="uk-btn uk-btn-default uk-btn-sm">
+          <!-- Auth: Logged Out (desktop only) -->
+          <a href="login.html" id="nav-login" class="uk-btn uk-btn-default uk-btn-sm desktop-only">
             Sign In
           </a>
 
-          <!-- Auth: Logged In -->
-          <div id="nav-user-area" class="flex items-center gap-2" style="display:none;">
+          <!-- Auth: Logged In (desktop only) -->
+          <div id="nav-user-area" class="flex items-center gap-2 desktop-only" style="display:none;">
             <a href="profile.html" class="uk-btn uk-btn-ghost uk-btn-sm" id="nav-user-email">User</a>
             <button onclick="logout()" class="uk-btn uk-btn-ghost uk-btn-icon uk-btn-sm" aria-label="Logout">
               <i data-lucide="log-out" class="h-4 w-4"></i>
@@ -134,40 +134,80 @@ function injectNavbar() {
           </div>
 
           <!-- Mobile Menu Toggle -->
-          <button class="mobile-nav-toggle uk-btn uk-btn-ghost uk-btn-icon uk-btn-sm" aria-label="Menu" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
-            <i data-lucide="menu" class="h-5 w-5"></i>
+          <button id="mobile-menu-btn" class="mobile-nav-toggle uk-btn uk-btn-ghost uk-btn-icon uk-btn-sm" aria-label="Menu" onclick="toggleMobileMenu()">
+            <i data-lucide="menu" class="h-5 w-5" id="burger-icon"></i>
           </button>
         </div>
       </div>
 
-      <!-- Mobile Nav -->
-      <nav id="mobile-menu" class="hidden mt-3 pb-3 flex flex-col gap-2 border-t pt-3" style="border-color: hsl(var(--border) / 0.5);">
-        <a href="index.html" class="nav-link ${currentPage === "index.html" ? "active" : ""}">Home</a>
-        <a href="shop.html" class="nav-link ${currentPage === "shop.html" ? "active" : ""}">Shop</a>
-        <a href="about.html" class="nav-link ${currentPage === "about.html" ? "active" : ""}">About</a>
-        <a href="contact.html" class="nav-link ${currentPage === "contact.html" ? "active" : ""}">Contact</a>
-        <!-- Mobile Search -->
-        <div class="navbar-search-wrapper mobile-search mt-2">
-          <form class="navbar-search" onsubmit="return _navSearchSubmit(event, 'navbar-search-input-mobile')" role="search">
-            <div class="navbar-search-inner">
-              <i data-lucide="search" class="navbar-search-icon"></i>
-              <input
-                id="navbar-search-input-mobile"
-                type="search"
-                placeholder="Search products…"
-                class="navbar-search-input"
-                autocomplete="off"
-                aria-label="Search products"
-              />
-            </div>
-          </form>
-          <div id="navbar-search-dropdown-mobile" class="navbar-search-dropdown"></div>
+      <!-- Mobile Nav (animated slide-down) -->
+      <nav id="mobile-menu" class="mobile-menu">
+        <div class="mobile-menu-inner">
+          <!-- Nav Links with Icons -->
+          <a href="index.html" class="mobile-nav-link ${currentPage === "index.html" ? "active" : ""}">
+            <i data-lucide="home" class="h-4 w-4"></i> Home
+          </a>
+          <a href="shop.html" class="mobile-nav-link ${currentPage === "shop.html" ? "active" : ""}">
+            <i data-lucide="shopping-bag" class="h-4 w-4"></i> Shop
+          </a>
+          <a href="about.html" class="mobile-nav-link ${currentPage === "about.html" ? "active" : ""}">
+            <i data-lucide="info" class="h-4 w-4"></i> About
+          </a>
+          <a href="contact.html" class="mobile-nav-link ${currentPage === "contact.html" ? "active" : ""}">
+            <i data-lucide="mail" class="h-4 w-4"></i> Contact
+          </a>
+
+          <!-- Divider -->
+          <div class="mobile-menu-divider"></div>
+
+          <!-- Mobile Search -->
+          <div class="navbar-search-wrapper mobile-search">
+            <form class="navbar-search" onsubmit="return _navSearchSubmit(event, 'navbar-search-input-mobile')" role="search">
+              <div class="navbar-search-inner">
+                <i data-lucide="search" class="navbar-search-icon"></i>
+                <input
+                  id="navbar-search-input-mobile"
+                  type="search"
+                  placeholder="Search products…"
+                  class="navbar-search-input"
+                  autocomplete="off"
+                  aria-label="Search products"
+                />
+              </div>
+            </form>
+            <div id="navbar-search-dropdown-mobile" class="navbar-search-dropdown"></div>
+          </div>
+
+          <!-- Divider -->
+          <div class="mobile-menu-divider"></div>
+
+          <!-- Auth + Theme in mobile menu -->
+          <div class="mobile-menu-footer">
+            <button onclick="toggleTheme()" class="mobile-nav-link" style="border:none;background:none;cursor:pointer;width:100%;text-align:left;">
+              <i data-lucide="${getTheme() === "dark" ? "sun" : "moon"}" class="h-4 w-4"></i>
+              ${getTheme() === "dark" ? "Light Mode" : "Dark Mode"}
+            </button>
+            <div id="mobile-auth-area"></div>
+          </div>
         </div>
       </nav>
     </div>
   `;
 
   document.body.prepend(nav);
+}
+
+// Toggle mobile menu with animation
+function toggleMobileMenu() {
+  const menu = document.getElementById("mobile-menu");
+  const icon = document.getElementById("burger-icon");
+  const isOpen = menu.classList.toggle("open");
+
+  // Swap burger ↔ X icon
+  if (icon) {
+    icon.setAttribute("data-lucide", isOpen ? "x" : "menu");
+    if (typeof lucide !== "undefined") lucide.createIcons();
+  }
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -235,6 +275,28 @@ function updateNavAuth() {
   } else {
     if (loginLink) loginLink.style.display = "";
     if (userArea) userArea.style.display = "none";
+  }
+
+  // Mobile auth area
+  const mobileAuth = document.getElementById("mobile-auth-area");
+  if (mobileAuth) {
+    if (user) {
+      mobileAuth.innerHTML = `
+        <a href="profile.html" class="mobile-nav-link">
+          <i data-lucide="user" class="h-4 w-4"></i> ${user.email.split("@")[0]}
+        </a>
+        <a href="#" onclick="logout()" class="mobile-nav-link">
+          <i data-lucide="log-out" class="h-4 w-4"></i> Sign Out
+        </a>
+      `;
+    } else {
+      mobileAuth.innerHTML = `
+        <a href="login.html" class="mobile-nav-link">
+          <i data-lucide="log-in" class="h-4 w-4"></i> Sign In
+        </a>
+      `;
+    }
+    if (typeof lucide !== "undefined") lucide.createIcons();
   }
 }
 
