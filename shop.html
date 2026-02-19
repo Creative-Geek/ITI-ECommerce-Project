@@ -15,6 +15,10 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
     />
+    <script>/* Suppress Tailwind CDN dev-mode warning */
+      const _tw_warn = console.warn;
+      console.warn = (...args) => { if (typeof args[0] === "string" && args[0].includes("cdn.tailwindcss.com")) return; _tw_warn.apply(console, args); };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -60,10 +64,10 @@
 
       <!-- Search + Filters -->
       <div
-        class="flex flex-col md:flex-row gap-4 mb-6 items-start md:items-center"
+        class="flex flex-col md:flex-row gap-4 mb-6 items-start md:items-center flex-wrap"
       >
         <!-- Search -->
-        <div class="relative flex-1 w-full">
+        <div class="relative flex-1 w-full md:w-auto" style="min-width:200px">
           <i
             data-lucide="search"
             class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
@@ -74,6 +78,37 @@
             placeholder="Search products..."
             class="uk-input pl-10 w-full"
             oninput="handleSearch()"
+          />
+        </div>
+
+        <!-- Brand Filter -->
+        <select
+          id="brand-select"
+          class="uk-select w-full md:w-44"
+          onchange="applyFilters()"
+        >
+          <option value="all">All Brands</option>
+          <!-- Populated dynamically by JS -->
+        </select>
+
+        <!-- Price Range -->
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <input
+            id="price-min"
+            type="number"
+            placeholder="Min EGP"
+            min="0"
+            class="uk-input w-full md:w-28"
+            oninput="applyFilters()"
+          />
+          <span class="text-muted-foreground text-sm">–</span>
+          <input
+            id="price-max"
+            type="number"
+            placeholder="Max EGP"
+            min="0"
+            class="uk-input w-full md:w-28"
+            oninput="applyFilters()"
           />
         </div>
 
@@ -152,6 +187,7 @@
         renderProductSkeleton("product-grid", 8);
         try {
           allProducts = await apiGet("/rest/v1/products?select=*&order=id");
+          populateBrandFilter(allProducts);
           applyFilters();
         } catch (e) {
           console.error("Failed to load products:", e);
@@ -178,6 +214,20 @@
         applyFilters();
       }
 
+      // Populate brand dropdown from loaded products
+      function populateBrandFilter(products) {
+        const brandSelect = document.getElementById("brand-select");
+        if (!brandSelect) return;
+        // Requirement: Array Method — .reduce() + Set for extracting unique brands
+        const brands = [...new Set(products.map(p => p.brand).filter(Boolean))].sort();
+        brands.forEach(brand => {
+          const opt = document.createElement("option");
+          opt.value = brand;
+          opt.textContent = brand;
+          brandSelect.appendChild(opt);
+        });
+      }
+
       function applyFilters() {
         let products = [...allProducts];
         const query = document
@@ -185,8 +235,11 @@
           .value.toLowerCase()
           .trim();
         const sort = document.getElementById("sort-select").value;
+        const brand = document.getElementById("brand-select").value;
+        const minPrice = parseFloat(document.getElementById("price-min").value);
+        const maxPrice = parseFloat(document.getElementById("price-max").value);
 
-        // Requirement: Array Method — .filter() for category/search filtering
+        // Requirement: Array Method — .filter() for category/search/brand/price filtering
         if (activeCategory !== "all") {
           products = products.filter((p) => p.category === activeCategory);
         }
@@ -194,8 +247,18 @@
           products = products.filter(
             (p) =>
               p.name.toLowerCase().includes(query) ||
-              (p.description && p.description.toLowerCase().includes(query)),
+              (p.description && p.description.toLowerCase().includes(query)) ||
+              (p.brand && p.brand.toLowerCase().includes(query)),
           );
+        }
+        if (brand !== "all") {
+          products = products.filter((p) => p.brand === brand);
+        }
+        if (!isNaN(minPrice)) {
+          products = products.filter((p) => p.price >= minPrice);
+        }
+        if (!isNaN(maxPrice)) {
+          products = products.filter((p) => p.price <= maxPrice);
         }
 
         // Sort

@@ -222,7 +222,7 @@ function renderProducts(products, containerId = "product-grid") {
     .map(
       (product) => `
     <a href="product.html?id=${product.id}" class="uk-card product-card block no-underline text-foreground">
-      <div class="overflow-hidden rounded-t-lg bg-muted/30 p-4 flex items-center justify-center" style="height:200px">
+      <div class="product-card-image overflow-hidden rounded-t-lg p-4 flex items-center justify-center" style="height:200px">
         <img src="${product.image_url}" alt="${product.name}" 
              class="max-h-full max-w-full object-contain" 
              loading="lazy"
@@ -246,6 +246,9 @@ function renderProducts(products, containerId = "product-grid") {
     .join("");
 
   if (typeof lucide !== "undefined") lucide.createIcons();
+
+  // Trigger scroll animations for newly rendered cards
+  if (typeof refreshScrollAnimations === "function") refreshScrollAnimations();
 }
 
 function renderProductSkeleton(containerId = "product-grid", count = 8) {
@@ -283,17 +286,23 @@ function renderProductDetail(product) {
       marked.parse(product.description)
     : product.description || "";
 
+  // Parse markdown specs table using marked.js
+  const specsHTML =
+    typeof marked !== "undefined" && product.specs ?
+      marked.parse(product.specs)
+    : "";
+
   container.innerHTML = `
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
       <!-- Image -->
-      <div class="uk-card p-6 flex items-center justify-center" style="min-height:350px">
+      <div class="uk-card p-6 flex items-center justify-center product-card-image rounded-lg" style="min-height:350px">
         <img src="${product.image_url}" alt="${product.name}" 
-             class="max-h-80 max-w-full object-contain"
+             class="max-w-full object-contain md:max-h-[28rem] max-h-80"
              onerror="this.src='https://placehold.co/400x300/e2e8f0/94a3b8?text=No+Image'" />
       </div>
       <!-- Info -->
       <div>
-        <p class="text-xs uppercase tracking-wide text-muted-foreground mb-2">${product.category}</p>
+        <p class="text-xs uppercase tracking-wide text-muted-foreground mb-2">${product.category}${product.brand ? ` · ${product.brand}` : ""}</p>
         <h1 class="text-2xl font-bold text-foreground mb-4">${product.name}</h1>
         <p class="text-3xl font-bold mb-6" style="color:hsl(var(--primary))">EGP ${Number(product.price).toLocaleString()}</p>
         
@@ -306,13 +315,104 @@ function renderProductDetail(product) {
 
         ${product.stock !== undefined ? `<p class="text-sm text-muted-foreground mb-6"><i data-lucide="package" class="h-4 w-4 inline mr-1"></i> ${product.stock > 0 ? product.stock + " in stock" : "Out of stock"}</p>` : ""}
 
+        ${specsHTML ? `
+        <!-- Specifications -->
+        <div class="mb-8">
+          <h2 class="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+            <i data-lucide="cpu" class="h-5 w-5"></i> Specifications
+          </h2>
+          <div class="prose specs-table">${specsHTML}</div>
+        </div>` : ""}
+
         <!-- Description rendered from markdown -->
         <div class="prose">${descHTML}</div>
+      </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div id="product-reviews" class="mt-12">
+      <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
+        <i data-lucide="message-square" class="h-5 w-5"></i> Customer Reviews
+      </h2>
+      <div id="reviews-list" class="space-y-4">
+        <div class="text-sm text-muted-foreground">Loading reviews...</div>
       </div>
     </div>
   `;
 
   if (typeof lucide !== "undefined") lucide.createIcons();
+
+  // Fetch and render reviews
+  loadProductReviews(product.id);
+}
+
+// ════════════════════════════════════════════════════════════════
+// §8b · PRODUCT REVIEWS
+// ════════════════════════════════════════════════════════════════
+
+async function loadProductReviews(productId) {
+  const container = document.getElementById("reviews-list");
+  if (!container) return;
+
+  try {
+    const reviews = await apiGet(
+      `/rest/v1/reviews?product_id=eq.${productId}&select=*&order=created_at.desc`
+    );
+
+    if (!reviews || reviews.length === 0) {
+      container.innerHTML = `<p class="text-sm text-muted-foreground">No reviews yet.</p>`;
+      return;
+    }
+
+    // Calculate average rating
+    const avgRating = (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1);
+
+    container.innerHTML = `
+      <div class="flex items-center gap-3 mb-6 p-4 rounded-lg" style="background:hsl(var(--muted)/0.3)">
+        <span class="text-3xl font-bold text-foreground">${avgRating}</span>
+        <div>
+          <div class="flex text-yellow-500">${generateStarHTML(avgRating)}</div>
+          <p class="text-xs text-muted-foreground mt-1">Based on ${reviews.length} review${reviews.length !== 1 ? "s" : ""}</p>
+        </div>
+      </div>
+      ${reviews.map(review => `
+        <div class="uk-card uk-card-body p-4">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground" style="background:hsl(var(--primary))">
+                ${review.reviewer_name.charAt(0)}
+              </div>
+              <span class="font-semibold text-sm text-foreground">${review.reviewer_name}</span>
+            </div>
+            <div class="flex text-yellow-500 text-xs">${generateStarHTML(review.rating)}</div>
+          </div>
+          <p class="text-sm text-muted-foreground">${review.review_text}</p>
+        </div>
+      `).join("")}
+    `;
+
+    if (typeof lucide !== "undefined") lucide.createIcons();
+  } catch (e) {
+    console.error("Failed to load reviews:", e);
+    container.innerHTML = `<p class="text-sm text-muted-foreground">Could not load reviews.</p>`;
+  }
+}
+
+function generateStarHTML(rating) {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = (rating % 1) >= 0.5;
+  let html = "";
+  for (let i = 0; i < fullStars; i++) {
+    html += '<i data-lucide="star" class="h-4 w-4 fill-current"></i>';
+  }
+  if (hasHalfStar) {
+    html += '<i data-lucide="star-half" class="h-4 w-4 fill-current"></i>';
+  }
+  const empty = 5 - fullStars - (hasHalfStar ? 1 : 0);
+  for (let i = 0; i < empty; i++) {
+    html += '<i data-lucide="star" class="h-4 w-4 text-gray-300"></i>';
+  }
+  return html;
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -448,4 +548,60 @@ document.addEventListener("DOMContentLoaded", function () {
   if (typeof lucide !== "undefined") {
     lucide.createIcons();
   }
+
+  // Set up scroll-triggered entrance animations
+  initScrollAnimations();
 });
+
+// ════════════════════════════════════════════════════════════════
+// §12 · SCROLL ANIMATIONS (IntersectionObserver)
+// ════════════════════════════════════════════════════════════════
+
+function initScrollAnimations() {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target); // animate only once
+        }
+      });
+    },
+    { threshold: 0.1 }
+  );
+
+  // Observe all product cards, uk-card elements, and sections
+  document
+    .querySelectorAll(".product-card, section, .uk-card")
+    .forEach((el) => {
+      el.classList.add("animate-on-scroll");
+      observer.observe(el);
+    });
+}
+
+// Re-apply scroll animations after dynamic content loads (e.g., renderProducts)
+function refreshScrollAnimations() {
+  // Small delay to let DOM update
+  setTimeout(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    document
+      .querySelectorAll(".product-card:not(.visible), .uk-card:not(.visible)")
+      .forEach((el) => {
+        if (!el.classList.contains("animate-on-scroll")) {
+          el.classList.add("animate-on-scroll");
+        }
+        observer.observe(el);
+      });
+  }, 50);
+}

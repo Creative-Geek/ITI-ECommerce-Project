@@ -19,6 +19,10 @@
       href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
     />
     <!-- Tailwind Play CDN -->
+    <script>/* Suppress Tailwind CDN dev-mode warning */
+      const _tw_warn = console.warn;
+      console.warn = (...args) => { if (typeof args[0] === "string" && args[0].includes("cdn.tailwindcss.com")) return; _tw_warn.apply(console, args); };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -96,6 +100,50 @@
                 <i data-lucide="arrow-down" class="h-4 w-4"></i>
               </a>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Brand Logos Carousel -->
+      <section class="brand-carousel-section py-8 border-b" style="border-color:hsl(var(--border)/0.3)">
+        <div class="uk-container mb-4">
+          <p class="text-xs uppercase tracking-widest text-muted-foreground text-center">Trusted brands we carry</p>
+        </div>
+        <div class="brand-carousel-wrapper">
+          <div class="brand-carousel">
+            <img src="assets/brandlogos/apple.svg" alt="Apple" class="brand-logo" />
+            <img src="assets/brandlogos/samsung.svg" alt="Samsung" class="brand-logo" />
+            <img src="assets/brandlogos/hp.svg" alt="HP" class="brand-logo" />
+            <img src="assets/brandlogos/dell.svg" alt="Dell" class="brand-logo" />
+            <img src="assets/brandlogos/lenovo.svg" alt="Lenovo" class="brand-logo" />
+            <img src="assets/brandlogos/asus.svg" alt="ASUS" class="brand-logo" />
+            <img src="assets/brandlogos/acer.svg" alt="Acer" class="brand-logo" />
+            <img src="assets/brandlogos/msi.svg" alt="MSI" class="brand-logo" />
+            <img src="assets/brandlogos/sony.svg" alt="Sony" class="brand-logo" />
+            <img src="assets/brandlogos/jbl.svg" alt="JBL" class="brand-logo" />
+            <img src="assets/brandlogos/razer.svg" alt="Razer" class="brand-logo" />
+            <img src="assets/brandlogos/corsair.svg" alt="Corsair" class="brand-logo" />
+            <img src="assets/brandlogos/xiaomi.svg" alt="Xiaomi" class="brand-logo" />
+            <img src="assets/brandlogos/hyperx.svg" alt="HyperX" class="brand-logo" />
+            <img src="assets/brandlogos/redragon.svg" alt="Redragon" class="brand-logo" />
+            <img src="assets/brandlogos/kingstontechnology.svg" alt="Kingston" class="brand-logo" />
+            <!-- Duplicate set for seamless loop -->
+            <img src="assets/brandlogos/apple.svg" alt="Apple" class="brand-logo" />
+            <img src="assets/brandlogos/samsung.svg" alt="Samsung" class="brand-logo" />
+            <img src="assets/brandlogos/hp.svg" alt="HP" class="brand-logo" />
+            <img src="assets/brandlogos/dell.svg" alt="Dell" class="brand-logo" />
+            <img src="assets/brandlogos/lenovo.svg" alt="Lenovo" class="brand-logo" />
+            <img src="assets/brandlogos/asus.svg" alt="ASUS" class="brand-logo" />
+            <img src="assets/brandlogos/acer.svg" alt="Acer" class="brand-logo" />
+            <img src="assets/brandlogos/msi.svg" alt="MSI" class="brand-logo" />
+            <img src="assets/brandlogos/sony.svg" alt="Sony" class="brand-logo" />
+            <img src="assets/brandlogos/jbl.svg" alt="JBL" class="brand-logo" />
+            <img src="assets/brandlogos/razer.svg" alt="Razer" class="brand-logo" />
+            <img src="assets/brandlogos/corsair.svg" alt="Corsair" class="brand-logo" />
+            <img src="assets/brandlogos/xiaomi.svg" alt="Xiaomi" class="brand-logo" />
+            <img src="assets/brandlogos/hyperx.svg" alt="HyperX" class="brand-logo" />
+            <img src="assets/brandlogos/redragon.svg" alt="Redragon" class="brand-logo" />
+            <img src="assets/brandlogos/kingstontechnology.svg" alt="Kingston" class="brand-logo" />
           </div>
         </div>
       </section>
@@ -199,32 +247,40 @@
     <script>
       // Load products on page load
       document.addEventListener("DOMContentLoaded", async () => {
-        // Load trending products (4 items)
+        // Load trending products (1 per category = 4 items, balanced)
         renderProductSkeleton("trending-products-grid", 4);
         try {
-          const trendingProducts = await apiGet(
-            "/rest/v1/products?select=*&limit=4",
+          const allProducts = await apiGet(
+            "/rest/v1/products?select=*&order=id",
           );
-          renderTrendingProducts(trendingProducts, "trending-products-grid");
-        } catch (e) {
-          console.error("Failed to load trending products:", e);
-          document.getElementById("trending-products-grid").innerHTML =
-            '<p class="col-span-full text-center text-muted-foreground py-8">Could not load products.</p>';
-        }
 
-        // Load featured products (8 items)
-        renderProductSkeleton("product-grid", 8);
-        try {
-          const featuredProducts = await apiGet(
-            "/rest/v1/products?select=*&limit=8",
-          );
+          // Pick 1 per category for trending
+          const trendingProducts = pickPerCategory(allProducts, 1);
+          renderTrendingProducts(trendingProducts, "trending-products-grid");
+
+          // Pick 2 per category for featured (8 total, balanced)
+          renderProductSkeleton("product-grid", 8);
+          const featuredProducts = pickPerCategory(allProducts, 2);
           renderProducts(featuredProducts, "product-grid");
         } catch (e) {
-          console.error("Failed to load featured products:", e);
+          console.error("Failed to load products:", e);
+          document.getElementById("trending-products-grid").innerHTML =
+            '<p class="col-span-full text-center text-muted-foreground py-8">Could not load products.</p>';
           document.getElementById("product-grid").innerHTML =
             '<p class="col-span-full text-center text-muted-foreground py-8">Could not load products. Please try again later.</p>';
         }
       });
+
+      // Pick N products per category for balanced display
+      function pickPerCategory(products, perCategory) {
+        const categories = ["laptop", "phone", "audio", "accessory"];
+        const result = [];
+        categories.forEach(cat => {
+          const catProducts = products.filter(p => p.category === cat);
+          result.push(...catProducts.slice(0, perCategory));
+        });
+        return result;
+      }
 
       // Render trending products with rating
       function renderTrendingProducts(products, containerId) {
@@ -247,7 +303,7 @@
             return `
             <div class="uk-card product-card overflow-hidden">
               <a href="product.html?id=${product.id}" class="block no-underline text-foreground">
-                <div class="overflow-hidden bg-muted/30 p-3 flex items-center justify-center" style="height:140px">
+                <div class="product-card-image overflow-hidden rounded-t-lg p-3 flex items-center justify-center" style="height:140px">
                   <img src="${product.image_url}" alt="${product.name}" 
                        class="max-h-full max-w-full object-contain transition-transform duration-300 hover:scale-105" 
                        loading="lazy"
@@ -262,13 +318,13 @@
                     <span class="text-xs text-muted-foreground">${rating}</span>
                   </div>
                   <div class="flex items-center justify-between">
-                    <span class="text-sm font-bold" style="color:hsl(var(--primary))">$${Number(product.price).toLocaleString()}</span>
+                    <span class="text-sm font-bold" style="color:hsl(var(--primary))">EGP ${Number(product.price).toLocaleString()}</span>
                   </div>
                 </div>
               </a>
               <div class="px-3 pb-3">
                 <button
-                  onclick="event.preventDefault(); event.stopPropagation(); addToCart({id:${product.id}, name:'${product.name.replace(/'/g, "\\'")}', price:${product.price}, image_url:'${product.image_url}', category:'${product.category}'}); showToast('Added to cart!', 'success');"
+                  onclick="event.preventDefault(); event.stopPropagation(); addToCart({id:${product.id}, name:'${product.name.replace(/'/g, "\\'")}', price:${product.price}, image_url:'${product.image_url}', category:'${product.category}'});"
                   class="uk-btn uk-btn-primary uk-btn-sm w-full">
                   <i data-lucide="shopping-cart" class="h-3 w-3 mr-1"></i> Add to Cart
                 </button>

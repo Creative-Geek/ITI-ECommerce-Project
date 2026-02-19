@@ -15,6 +15,10 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
     />
+    <script>/* Suppress Tailwind CDN dev-mode warning */
+      const _tw_warn = console.warn;
+      console.warn = (...args) => { if (typeof args[0] === "string" && args[0].includes("cdn.tailwindcss.com")) return; _tw_warn.apply(console, args); };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {

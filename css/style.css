@@ -3,6 +3,10 @@
 /* ── Inter Font (from Franken UI's recommended preconnect) ──────────── */
 @import url("https://rsms.me/inter/inter.css");
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   /* Use Inter like Franken UI quickstart */
   font-family: Inter, sans-serif;
@@ -229,6 +233,16 @@ main {
   transform: scale(1.05);
 }
 
+/* Dark mode: keep product image areas white so white-background product photos
+   don't clash with the dark card surface */
+.product-card-image {
+  background-color: #ffffff !important;
+}
+
+.dark .product-card-image {
+  background-color: #ffffff !important;
+}
+
 /* ── Product Detail — Markdown Description (.prose) ─────────────────── */
 .prose {
   line-height: 1.7;
@@ -276,6 +290,37 @@ main {
 .prose a {
   color: hsl(var(--primary));
   text-decoration: underline;
+}
+
+/* Specs table rendered from Markdown */
+.specs-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.specs-table th,
+.specs-table td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+
+.specs-table th {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  background: hsl(var(--muted) / 0.3);
+  white-space: nowrap;
+  width: 35%;
+}
+
+.specs-table td {
+  color: hsl(var(--muted-foreground));
+}
+
+.specs-table tr:last-child th,
+.specs-table tr:last-child td {
+  border-bottom: none;
 }
 
 .prose code {
@@ -406,6 +451,12 @@ main {
   .mobile-nav-toggle {
     display: flex !important;
   }
+
+  /* Move toasts to bottom on mobile so they don't block the navbar */
+  .toast-container {
+    top: auto;
+    bottom: 1rem;
+  }
 }
 
 @media (min-width: 769px) {
@@ -450,4 +501,109 @@ main {
 .empty-state i {
   margin-bottom: 1rem;
   opacity: 0.4;
+}
+
+/* ── Page Load Fade-In ─────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+body {
+  animation: fadeIn 0.35s ease-in;
+}
+
+/* ── Scroll-Triggered Card Entrance Animation ──────────────────────── */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Enhanced Hover Effects ────────────────────────────────────────── */
+/* Smoother card hover (extends existing .product-card rules) */
+.product-card {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* CTA buttons — subtle scale on hover */
+.uk-btn-primary {
+  transition: background 0.2s, transform 0.15s ease;
+}
+
+.uk-btn-primary:hover {
+  transform: scale(1.03);
+}
+
+/* Category cards on homepage */
+.uk-card.uk-card-body.group {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.3s ease;
+}
+
+.uk-card.uk-card-body.group:hover {
+  transform: translateY(-4px);
+}
+
+/* Nav link hover — smoother underline */
+.nav-link::after {
+  transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Brand Logos Carousel (CSS Marquee) ────────────────────────────── */
+.brand-carousel-wrapper {
+  overflow: hidden;
+  position: relative;
+  mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+}
+
+.brand-carousel {
+  display: flex;
+  gap: 3rem;
+  white-space: nowrap;
+  animation: marquee 30s linear infinite;
+  width: max-content;
+}
+
+.brand-logo {
+  height: 28px;
+  width: auto;
+  opacity: 0.45;
+  transition: opacity 0.3s, filter 0.3s;
+  user-select: none;
+  flex-shrink: 0;
+  /* Make logos monochrome in light mode, restore on hover */
+  filter: grayscale(100%) brightness(0.4);
+}
+
+.dark .brand-logo {
+  filter: grayscale(100%) brightness(1) invert(1);
+  opacity: 0.4;
+}
+
+.brand-logo:hover {
+  opacity: 1;
+  filter: grayscale(0%) brightness(1);
+}
+
+.dark .brand-logo:hover {
+  filter: grayscale(0%) brightness(1) invert(0);
+  opacity: 1;
+}
+
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Pause on hover */
+.brand-carousel-wrapper:hover .brand-carousel {
+  animation-play-state: paused;
 }
