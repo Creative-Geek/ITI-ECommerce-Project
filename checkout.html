@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-        <link rel="icon" href="assets/bytestorelogo.svg" type="image/svg+xml" />
+    <link rel="icon" href="assets/bytestorelogo.svg" type="image/svg+xml" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>byteStore - Checkout</title>
     <meta name="description" content="Complete your order." />
@@ -12,9 +12,17 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
     />
-    <script>/* Suppress Tailwind CDN dev-mode warning */
+    <script>
+      /* Suppress Tailwind CDN dev-mode warning */
       const _tw_warn = console.warn;
-      console.warn = (...args) => { if (typeof args[0] === "string" && args[0].includes("cdn.tailwindcss.com")) return; _tw_warn.apply(console, args); };
+      console.warn = (...args) => {
+        if (
+          typeof args[0] === "string" &&
+          args[0].includes("cdn.tailwindcss.com")
+        )
+          return;
+        _tw_warn.apply(console, args);
+      };
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -119,7 +127,8 @@
                 required
               />
               <p class="text-xs text-destructive mt-1 hidden" id="phone-error">
-                Enter a valid Egyptian phone number (11 digits, starting with 010, 011, 012, or 015)
+                Enter a valid Egyptian phone number (11 digits, starting with
+                010, 011, 012, or 015)
               </p>
             </div>
 
@@ -279,6 +288,34 @@
                 return;
               }
 
+              // Stock validation: check live stock before placing order
+              const productIds = cart.map((i) => i.id).join(",");
+              const freshProducts = await apiGet(
+                `/rest/v1/products?id=in.(${productIds})&select=id,name,stock`,
+                token,
+              );
+              const stockMap = Object.fromEntries(
+                freshProducts.map((p) => [p.id, p]),
+              );
+              const outOfStock = cart.filter((item) => {
+                const live = stockMap[item.id];
+                return live != null && item.quantity > live.stock;
+              });
+              if (outOfStock.length > 0) {
+                const names = outOfStock
+                  .map((item) => {
+                    const live = stockMap[item.id];
+                    return `"${item.name}" (only ${live.stock} left)`;
+                  })
+                  .join(", ");
+                showToast(`Not enough stock for: ${names}`, "error");
+                btn.disabled = false;
+                btn.innerHTML =
+                  '<i data-lucide="lock" class="h-4 w-4 mr-2"></i> Place Order';
+                if (typeof lucide !== "undefined") lucide.createIcons();
+                return;
+              }
+
               const orderData = {
                 user_id: user.id,
                 total_amount: getCartTotal(),
@@ -353,7 +390,10 @@
         const phoneInput = document.getElementById("phone");
         const phoneError = document.getElementById("phone-error");
         const phoneRegex = /^(010|011|012|015)\d{8}$/;
-        if (phoneInput.value.trim() && !phoneRegex.test(phoneInput.value.trim())) {
+        if (
+          phoneInput.value.trim() &&
+          !phoneRegex.test(phoneInput.value.trim())
+        ) {
           phoneError?.classList.remove("hidden");
           valid = false;
         }

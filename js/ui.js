@@ -87,6 +87,7 @@ function injectNavbar() {
           <a href="shop.html" class="nav-link ${currentPage === "shop.html" ? "active" : ""}">Shop</a>
           <a href="about.html" class="nav-link ${currentPage === "about.html" ? "active" : ""}">About</a>
           <a href="contact.html" class="nav-link ${currentPage === "contact.html" ? "active" : ""}">Contact</a>
+          ${typeof isAdmin === "function" && isAdmin() ? `<a href="admin.html" class="nav-link ${currentPage === "admin.html" ? "active" : ""}"><i data-lucide="shield" class="h-3.5 w-3.5 inline mr-1"></i>Admin</a>` : ""}
         </nav>
 
         <!-- Right Actions -->
@@ -128,6 +129,7 @@ function injectNavbar() {
         <a href="shop.html" class="nav-link ${currentPage === "shop.html" ? "active" : ""}">Shop</a>
         <a href="about.html" class="nav-link ${currentPage === "about.html" ? "active" : ""}">About</a>
         <a href="contact.html" class="nav-link ${currentPage === "contact.html" ? "active" : ""}">Contact</a>
+        ${typeof isAdmin === "function" && isAdmin() ? `<a href="admin.html" class="nav-link ${currentPage === "admin.html" ? "active" : ""}"><i data-lucide="shield" class="h-3.5 w-3.5 inline mr-1"></i>Admin</a>` : ""}
       </nav>
     </div>
   `;

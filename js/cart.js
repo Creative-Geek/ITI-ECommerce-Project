@@ -15,10 +15,22 @@ function saveCart(cart) {
 function addToCart(product) {
   const cart = getCart();
   const existing = cart.find((item) => item.id === product.id);
+  const stock = product.stock ?? Infinity; // treat missing stock as unlimited
 
   if (existing) {
+    if (existing.quantity >= stock) {
+      showToast(
+        `Only ${stock} unit${stock !== 1 ? "s" : ""} of "${product.name}" available`,
+        "error",
+      );
+      return;
+    }
     existing.quantity += 1;
   } else {
+    if (stock === 0) {
+      showToast(`"${product.name}" is out of stock`, "error");
+      return;
+    }
     cart.push({ ...product, quantity: 1 });
   }
 
@@ -40,6 +52,16 @@ function updateQuantity(productId, delta) {
   const cart = getCart();
   const item = cart.find((i) => i.id === productId);
   if (!item) return;
+
+  const stock = item.stock ?? Infinity; // stock is stored with the cart item
+
+  if (delta > 0 && item.quantity >= stock) {
+    showToast(
+      `Only ${stock} unit${stock !== 1 ? "s" : ""} of "${item.name}" available`,
+      "error",
+    );
+    return;
+  }
 
   item.quantity += delta;
   if (item.quantity <= 0) {

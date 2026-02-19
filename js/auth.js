@@ -59,3 +59,35 @@ function getCurrentUser() {
   const user = localStorage.getItem("user");
   return user ? JSON.parse(user) : null;
 }
+
+// ── Admin Access Control ──────────────────────────────────────────
+const ADMIN_EMAIL = "ahmedtaha1234@gmail.com";
+
+/**
+ * Check if the current user is the admin.
+ * Decodes the JWT to read the email claim.
+ */
+function isAdmin() {
+  const token = localStorage.getItem("access_token");
+  if (!token) return false;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.email === ADMIN_EMAIL;
+  } catch (_) {
+    return false;
+  }
+}
+
+/**
+ * Redirect to index if user is not the admin.
+ * Call at the top of admin pages.
+ */
+function requireAdmin() {
+  if (!localStorage.getItem("access_token")) {
+    window.location.href = "login.html";
+    return;
+  }
+  if (!isAdmin()) {
+    window.location.href = "index.html";
+  }
+}

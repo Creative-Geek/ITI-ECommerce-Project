@@ -73,3 +73,74 @@ async function apiPost(endpoint, body, accessToken = null, options = {}) {
   // return=representation wraps result in an array
   return Array.isArray(data) && options.returnData ? data[0] : data;
 }
+
+/**
+ * Generic PATCH request to Supabase REST API.
+ * @param {string} endpoint - e.g. "/rest/v1/products?id=eq.5"
+ * @param {object} body - JSON payload with fields to update.
+ * @param {string|null} accessToken - Pass user's JWT for protected routes.
+ */
+async function apiPatch(endpoint, body, accessToken = null) {
+  const headers = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${accessToken || SUPABASE_ANON_KEY}`,
+    "Content-Type": "application/json",
+    Prefer: "return=representation",
+  };
+
+  const response = await fetch(`${SUPABASE_URL}${endpoint}`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      console.warn("Session expired — please log in again.");
+      localStorage.removeItem("access_token");
+    }
+    let errMsg = `PATCH ${endpoint} failed (${response.status})`;
+    try {
+      const err = await response.json();
+      errMsg = err.error_description || err.msg || err.message || errMsg;
+    } catch (_) {}
+    throw new Error(errMsg);
+  }
+
+  const text = await response.text();
+  if (!text) return {};
+  const data = JSON.parse(text);
+  return Array.isArray(data) ? data[0] : data;
+}
+
+/**
+ * Generic DELETE request to Supabase REST API.
+ * @param {string} endpoint - e.g. "/rest/v1/products?id=eq.5"
+ * @param {string|null} accessToken - Pass user's JWT for protected routes.
+ */
+async function apiDelete(endpoint, accessToken = null) {
+  const headers = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${accessToken || SUPABASE_ANON_KEY}`,
+    "Content-Type": "application/json",
+  };
+
+  const response = await fetch(`${SUPABASE_URL}${endpoint}`, {
+    method: "DELETE",
+    headers,
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      console.warn("Session expired — please log in again.");
+      localStorage.removeItem("access_token");
+    }
+    let errMsg = `DELETE ${endpoint} failed (${response.status})`;
+    try {
+      const err = await response.json();
+      errMsg = err.error_description || err.msg || err.message || errMsg;
+    } catch (_) {}
+    throw new Error(errMsg);
+  }
+  return true;
+}
