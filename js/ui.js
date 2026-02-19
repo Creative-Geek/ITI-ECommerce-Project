@@ -2,6 +2,18 @@
 // This is loaded on every page via <script src="js/ui.js"></script>
 
 // ════════════════════════════════════════════════════════════════
+// §0 · PRODUCT CACHE (safe add-to-cart without inline JSON)
+// ════════════════════════════════════════════════════════════════
+
+// Keyed by product id — avoids embedding JSON with quotes into HTML attributes.
+const _productCache = {};
+
+function addToCartById(id) {
+  const product = _productCache[id];
+  if (product) addToCart(product);
+}
+
+// ════════════════════════════════════════════════════════════════
 // §1 · THEME TOGGLE
 // ════════════════════════════════════════════════════════════════
 
@@ -218,6 +230,9 @@ function renderProducts(products, containerId = "product-grid") {
   }
 
   // Requirement: Array Method — .map() for rendering lists
+  // Store products in cache so buttons can reference by id (avoids quote-breaking inline JSON)
+  products.forEach((p) => { _productCache[p.id] = p; });
+
   grid.innerHTML = products
     .map(
       (product) => `
@@ -234,7 +249,7 @@ function renderProducts(products, containerId = "product-grid") {
         <div class="flex items-center justify-between mt-3">
           <span class="text-lg font-bold text-primary" style="color:hsl(var(--primary))">EGP ${Number(product.price).toLocaleString()}</span>
           <button
-            onclick="event.preventDefault(); event.stopPropagation(); addToCart({id:${product.id}, name:'${product.name.replace(/'/g, "\\'")}', price:${product.price}, image_url:'${product.image_url}', category:'${product.category}'})"
+            onclick="event.preventDefault(); event.stopPropagation(); addToCartById(${product.id});"
             class="uk-btn uk-btn-primary uk-btn-xs">
             <i data-lucide="shopping-cart" class="h-3.5 w-3.5 mr-1"></i> Add
           </button>
@@ -280,6 +295,9 @@ function renderProductDetail(product) {
   const container = document.getElementById("product-detail");
   if (!container) return;
 
+  // Cache product for safe cart lookup
+  _productCache[product.id] = product;
+
   // Parse markdown description using marked.js
   const descHTML =
     typeof marked !== "undefined" && product.description ?
@@ -307,7 +325,7 @@ function renderProductDetail(product) {
         <p class="text-3xl font-bold mb-6" style="color:hsl(var(--primary))">EGP ${Number(product.price).toLocaleString()}</p>
         
         <div class="flex gap-3 mb-8">
-          <button onclick="addToCart({id:${product.id}, name:'${product.name.replace(/'/g, "\\'")}', price:${product.price}, image_url:'${product.image_url}', category:'${product.category}'})"
+          <button onclick="addToCartById(${product.id})"
                   class="uk-btn uk-btn-primary uk-btn-md flex-1">
             <i data-lucide="shopping-cart" class="h-4 w-4 mr-2"></i> Add to Cart
           </button>
