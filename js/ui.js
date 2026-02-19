@@ -89,6 +89,24 @@ function injectNavbar() {
           <a href="contact.html" class="nav-link ${currentPage === "contact.html" ? "active" : ""}">Contact</a>
         </nav>
 
+        <!-- Desktop Search Bar -->
+        <div class="navbar-search-wrapper desktop-search">
+          <form class="navbar-search" onsubmit="return _navSearchSubmit(event, 'navbar-search-input')" role="search">
+            <div class="navbar-search-inner">
+              <i data-lucide="search" class="navbar-search-icon"></i>
+              <input
+                id="navbar-search-input"
+                type="search"
+                placeholder="Search products…"
+                class="navbar-search-input"
+                autocomplete="off"
+                aria-label="Search products"
+              />
+            </div>
+          </form>
+          <div id="navbar-search-dropdown" class="navbar-search-dropdown"></div>
+        </div>
+
         <!-- Right Actions -->
         <div class="flex items-center gap-3">
           <!-- Theme Toggle -->
@@ -128,6 +146,23 @@ function injectNavbar() {
         <a href="shop.html" class="nav-link ${currentPage === "shop.html" ? "active" : ""}">Shop</a>
         <a href="about.html" class="nav-link ${currentPage === "about.html" ? "active" : ""}">About</a>
         <a href="contact.html" class="nav-link ${currentPage === "contact.html" ? "active" : ""}">Contact</a>
+        <!-- Mobile Search -->
+        <div class="navbar-search-wrapper mobile-search mt-2">
+          <form class="navbar-search" onsubmit="return _navSearchSubmit(event, 'navbar-search-input-mobile')" role="search">
+            <div class="navbar-search-inner">
+              <i data-lucide="search" class="navbar-search-icon"></i>
+              <input
+                id="navbar-search-input-mobile"
+                type="search"
+                placeholder="Search products…"
+                class="navbar-search-input"
+                autocomplete="off"
+                aria-label="Search products"
+              />
+            </div>
+          </form>
+          <div id="navbar-search-dropdown-mobile" class="navbar-search-dropdown"></div>
+        </div>
       </nav>
     </div>
   `;
@@ -570,7 +605,144 @@ function renderOrderHistory(orders) {
 }
 
 // ════════════════════════════════════════════════════════════════
-// §11 · PAGE INIT — runs on every page DOMContentLoaded
+// §11 · REACTIVE NAVBAR SEARCH
+// ════════════════════════════════════════════════════════════════
+
+// Shared submit handler — Enter key goes to full shop results
+function _navSearchSubmit(event, inputId) {
+  event.preventDefault();
+  const q = document.getElementById(inputId).value.trim();
+  window.location.href =
+    q ? "shop.html?search=" + encodeURIComponent(q) : "shop.html";
+  return false;
+}
+
+// Lazy product cache for live search
+let _navSearchProducts = null;
+let _navSearchTimer = null;
+
+async function initNavbarSearch() {
+  const pairs = [
+    { inputId: "navbar-search-input", dropdownId: "navbar-search-dropdown" },
+    {
+      inputId: "navbar-search-input-mobile",
+      dropdownId: "navbar-search-dropdown-mobile",
+    },
+  ];
+
+  // Lazy-fetch products once; shared across both inputs
+  async function getProducts() {
+    if (_navSearchProducts) return _navSearchProducts;
+    try {
+      _navSearchProducts = await apiGet(
+        "/rest/v1/products?select=id,name,category,brand,price,image_url&order=id",
+      );
+    } catch (e) {
+      _navSearchProducts = [];
+    }
+    return _navSearchProducts;
+  }
+
+  function highlight(text, query) {
+    const idx = text.toLowerCase().indexOf(query.toLowerCase());
+    if (idx === -1) return text;
+    return (
+      text.slice(0, idx) +
+      '<mark class="nav-hl">' +
+      text.slice(idx, idx + query.length) +
+      "</mark>" +
+      text.slice(idx + query.length)
+    );
+  }
+
+  function showDropdown(dropdownEl, products, query) {
+    if (!products.length) {
+      dropdownEl.innerHTML = `<div class="navbar-sd-empty">No results for "<strong>${query}</strong>"</div>`;
+    } else {
+      dropdownEl.innerHTML =
+        products
+          .map(
+            (p) => `
+          <a href="product.html?id=${p.id}" class="navbar-sd-item">
+            <div class="navbar-sd-img">
+              <img src="${p.image_url}" alt="${p.name}"
+                   onerror="this.src='https://placehold.co/44x44/e2e8f0/94a3b8?text=?'" />
+            </div>
+            <div class="navbar-sd-info">
+              <div class="navbar-sd-name">${highlight(p.name, query)}</div>
+              <div class="navbar-sd-meta">${p.category}${p.brand ? " · " + p.brand : ""} &nbsp;·&nbsp; EGP ${Number(p.price).toLocaleString()}</div>
+            </div>
+          </a>
+        `,
+          )
+          .join("") +
+        `<a href="shop.html?search=${encodeURIComponent(query)}" class="navbar-sd-all">
+           <i data-lucide="search" style="width:13px;height:13px;display:inline;vertical-align:middle;margin-right:4px"></i>
+           See all results for "${query}"
+         </a>`;
+    }
+    dropdownEl.style.display = "block";
+    if (typeof lucide !== "undefined") lucide.createIcons();
+  }
+
+  function hideDropdown(dropdownEl) {
+    dropdownEl.style.display = "none";
+    dropdownEl.innerHTML = "";
+  }
+
+  pairs.forEach(({ inputId, dropdownId }) => {
+    const input = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+    if (!input || !dropdown) return;
+
+    // Initially hidden
+    dropdown.style.display = "none";
+
+    input.addEventListener("input", () => {
+      clearTimeout(_navSearchTimer);
+      const query = input.value.trim();
+      if (!query) {
+        hideDropdown(dropdown);
+        return;
+      }
+
+      _navSearchTimer = setTimeout(async () => {
+        const products = await getProducts();
+        const filtered = products
+          .filter(
+            (p) =>
+              p.name.toLowerCase().includes(query.toLowerCase()) ||
+              (p.brand &&
+                p.brand.toLowerCase().includes(query.toLowerCase())) ||
+              p.category.toLowerCase().includes(query.toLowerCase()),
+          )
+          .slice(0, 6);
+        showDropdown(dropdown, filtered, query);
+      }, 150);
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        hideDropdown(dropdown);
+        input.blur();
+      }
+    });
+
+    // Close when clicking outside the wrapper
+    document.addEventListener(
+      "click",
+      (e) => {
+        if (!input.closest(".navbar-search-wrapper").contains(e.target)) {
+          hideDropdown(dropdown);
+        }
+      },
+      true,
+    );
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// §12 · PAGE INIT — runs on every page DOMContentLoaded
 // ════════════════════════════════════════════════════════════════
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -578,6 +750,7 @@ document.addEventListener("DOMContentLoaded", function () {
   injectFooter();
   updateNavAuth();
   updateCartBadge();
+  initNavbarSearch();
 
   // Re-init Lucide icons after DOM injection
   if (typeof lucide !== "undefined") {

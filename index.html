@@ -110,40 +110,25 @@
           <p class="text-xs uppercase tracking-widest text-muted-foreground text-center">Trusted brands we carry</p>
         </div>
         <div class="brand-carousel-wrapper">
-          <div class="brand-carousel">
-            <img src="assets/brandlogos/apple.svg" alt="Apple" class="brand-logo" />
-            <img src="assets/brandlogos/samsung.svg" alt="Samsung" class="brand-logo" />
-            <img src="assets/brandlogos/hp.svg" alt="HP" class="brand-logo" />
-            <img src="assets/brandlogos/dell.svg" alt="Dell" class="brand-logo" />
-            <img src="assets/brandlogos/lenovo.svg" alt="Lenovo" class="brand-logo" />
-            <img src="assets/brandlogos/asus.svg" alt="ASUS" class="brand-logo" />
-            <img src="assets/brandlogos/acer.svg" alt="Acer" class="brand-logo" />
-            <img src="assets/brandlogos/msi.svg" alt="MSI" class="brand-logo" />
-            <img src="assets/brandlogos/sony.svg" alt="Sony" class="brand-logo" />
-            <img src="assets/brandlogos/jbl.svg" alt="JBL" class="brand-logo" />
-            <img src="assets/brandlogos/razer.svg" alt="Razer" class="brand-logo" />
-            <img src="assets/brandlogos/corsair.svg" alt="Corsair" class="brand-logo" />
-            <img src="assets/brandlogos/xiaomi.svg" alt="Xiaomi" class="brand-logo" />
-            <img src="assets/brandlogos/hyperx.svg" alt="HyperX" class="brand-logo" />
-            <img src="assets/brandlogos/redragon.svg" alt="Redragon" class="brand-logo" />
-            <img src="assets/brandlogos/kingstontechnology.svg" alt="Kingston" class="brand-logo" />
-            <!-- Duplicate set for seamless loop -->
-            <img src="assets/brandlogos/apple.svg" alt="Apple" class="brand-logo" />
-            <img src="assets/brandlogos/samsung.svg" alt="Samsung" class="brand-logo" />
-            <img src="assets/brandlogos/hp.svg" alt="HP" class="brand-logo" />
-            <img src="assets/brandlogos/dell.svg" alt="Dell" class="brand-logo" />
-            <img src="assets/brandlogos/lenovo.svg" alt="Lenovo" class="brand-logo" />
-            <img src="assets/brandlogos/asus.svg" alt="ASUS" class="brand-logo" />
-            <img src="assets/brandlogos/acer.svg" alt="Acer" class="brand-logo" />
-            <img src="assets/brandlogos/msi.svg" alt="MSI" class="brand-logo" />
-            <img src="assets/brandlogos/sony.svg" alt="Sony" class="brand-logo" />
-            <img src="assets/brandlogos/jbl.svg" alt="JBL" class="brand-logo" />
-            <img src="assets/brandlogos/razer.svg" alt="Razer" class="brand-logo" />
-            <img src="assets/brandlogos/corsair.svg" alt="Corsair" class="brand-logo" />
-            <img src="assets/brandlogos/xiaomi.svg" alt="Xiaomi" class="brand-logo" />
-            <img src="assets/brandlogos/hyperx.svg" alt="HyperX" class="brand-logo" />
-            <img src="assets/brandlogos/redragon.svg" alt="Redragon" class="brand-logo" />
-            <img src="assets/brandlogos/kingstontechnology.svg" alt="Kingston" class="brand-logo" />
+          <div class="brand-carousel" id="brand-carousel">
+            <div class="brand-set">
+              <img src="assets/brandlogos/apple.svg" alt="Apple" class="brand-logo" />
+              <img src="assets/brandlogos/samsung.svg" alt="Samsung" class="brand-logo" />
+              <img src="assets/brandlogos/hp.svg" alt="HP" class="brand-logo" />
+              <img src="assets/brandlogos/dell.svg" alt="Dell" class="brand-logo" />
+              <img src="assets/brandlogos/lenovo.svg" alt="Lenovo" class="brand-logo" />
+              <img src="assets/brandlogos/asus.svg" alt="ASUS" class="brand-logo" />
+              <img src="assets/brandlogos/acer.svg" alt="Acer" class="brand-logo" />
+              <img src="assets/brandlogos/msi.svg" alt="MSI" class="brand-logo" />
+              <img src="assets/brandlogos/sony.svg" alt="Sony" class="brand-logo" />
+              <img src="assets/brandlogos/jbl.svg" alt="JBL" class="brand-logo" />
+              <img src="assets/brandlogos/razer.svg" alt="Razer" class="brand-logo" />
+              <img src="assets/brandlogos/corsair.svg" alt="Corsair" class="brand-logo" />
+              <img src="assets/brandlogos/xiaomi.svg" alt="Xiaomi" class="brand-logo" />
+              <img src="assets/brandlogos/hyperx.svg" alt="HyperX" class="brand-logo" />
+              <img src="assets/brandlogos/redragon.svg" alt="Redragon" class="brand-logo" />
+              <img src="assets/brandlogos/kingstontechnology.svg" alt="Kingston" class="brand-logo" />
+            </div>
           </div>
         </div>
       </section>
@@ -327,6 +312,34 @@
     <script>
       // Load products on page load
       document.addEventListener("DOMContentLoaded", async () => {
+        // ── Brand carousel: clone sets until content is wider than viewport ──
+        (function initBrandCarousel() {
+          const carousel = document.getElementById("brand-carousel");
+          if (!carousel) return;
+          const originalSet = carousel.querySelector(".brand-set");
+          if (!originalSet) return;
+
+          // Wait for images to load so widths are accurate
+          const imgs = originalSet.querySelectorAll("img");
+          const loaded = Array.from(imgs).map(img =>
+            img.complete
+              ? Promise.resolve()
+              : new Promise(r => { img.onload = r; img.onerror = r; })
+          );
+          Promise.all(loaded).then(() => {
+            const setWidth = originalSet.offsetWidth;
+            const viewWidth = window.innerWidth;
+            // We need at least 2 copies, but enough so one full set scrolls
+            // while the rest fill the viewport without gaps
+            const copies = Math.ceil(viewWidth / setWidth) + 1;
+            for (let i = 0; i < copies; i++) {
+              carousel.appendChild(originalSet.cloneNode(true));
+            }
+            // Set the scroll distance to exactly one set width (negative)
+            carousel.style.setProperty("--scroll-width", `-${setWidth}px`);
+          });
+        })();
+
         // Load trending products (1 per category = 4 items, balanced)
         renderProductSkeleton("trending-products-grid", 4);
         try {
