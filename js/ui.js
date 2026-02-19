@@ -286,11 +286,15 @@ function renderProducts(products, containerId = "product-grid") {
         <h3 class="uk-card-title text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem]">${product.name}</h3>
         <div class="flex items-center justify-between mt-3">
           <span class="text-lg font-bold text-primary" style="color:hsl(var(--primary))">EGP ${Number(product.price).toLocaleString()}</span>
-          <button
+          ${
+            product.stock !== undefined && product.stock <= 0 ?
+              `<span class="text-xs font-semibold px-2 py-1 rounded" style="background:hsl(0 84% 60%/0.1);color:hsl(0 84% 60%)">Out of Stock</span>`
+            : `<button
             onclick="event.preventDefault(); event.stopPropagation(); addToCartById(${product.id});"
             class="uk-btn uk-btn-primary uk-btn-xs">
             <i data-lucide="shopping-cart" class="h-3.5 w-3.5 mr-1"></i> Add
-          </button>
+          </button>`
+          }
         </div>
       </div>
     </a>
@@ -363,10 +367,16 @@ function renderProductDetail(product) {
         <p class="text-3xl font-bold mb-6" style="color:hsl(var(--primary))">EGP ${Number(product.price).toLocaleString()}</p>
         
         <div class="flex gap-3 mb-8">
-          <button onclick="addToCartById(${product.id})"
+          ${
+            product.stock !== undefined && product.stock <= 0 ?
+              `<button disabled class="uk-btn uk-btn-md flex-1" style="background:hsl(var(--muted));color:hsl(var(--muted-foreground));cursor:not-allowed">
+                <i data-lucide="package-x" class="h-4 w-4 mr-2"></i> Out of Stock
+              </button>`
+            : `<button onclick="addToCartById(${product.id})"
                   class="uk-btn uk-btn-primary uk-btn-md flex-1">
             <i data-lucide="shopping-cart" class="h-4 w-4 mr-2"></i> Add to Cart
-          </button>
+          </button>`
+          }
         </div>
 
         ${product.stock !== undefined ? `<p class="text-sm text-muted-foreground mb-6"><i data-lucide="package" class="h-4 w-4 inline mr-1"></i> ${product.stock > 0 ? product.stock + " in stock" : "Out of stock"}</p>` : ""}
@@ -673,16 +683,79 @@ function renderOrderHistory(orders) {
           <p class="text-xs text-muted-foreground">${new Date(order.created_at).toLocaleDateString("en-EG", { year: "numeric", month: "long", day: "numeric" })}</p>
         </div>
         <div class="text-right">
-          <span class="uk-badge">${order.status || "Pending"}</span>
+          <span class="uk-badge${order.status === "cancelled" ? " uk-badge-destructive" : ""}">${order.status || "Pending"}</span>
           <p class="font-bold mt-1" style="color:hsl(var(--primary))">EGP ${Number(order.total_amount).toLocaleString()}</p>
         </div>
       </div>
+      ${
+        order.status === "pending" ?
+          `
+      <div class="mt-3 pt-3 border-t" style="border-color:hsl(var(--border)/0.5)">
+        <button onclick="cancelOrder(${order.id})" class="uk-btn uk-btn-sm" style="background:hsl(0 84% 60%/0.1);color:hsl(0 84% 60%)">
+          <i data-lucide="x-circle" class="h-3.5 w-3.5 mr-1"></i> Cancel Order
+        </button>
+      </div>`
+        : ""
+      }
     </div>
   `,
     )
     .join("");
 
   if (typeof lucide !== "undefined") lucide.createIcons();
+}
+
+// Cancel a pending order and restore stock
+async function cancelOrder(orderId) {
+  if (!confirm("Are you sure you want to cancel this order?")) return;
+
+  try {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      showToast("Please log in first", "error");
+      return;
+    }
+
+    // 1. Fetch order items to know what stock to restore
+    const items = await apiGet(
+      `/rest/v1/order_items?order_id=eq.${orderId}&select=product_id,quantity`,
+      token,
+    );
+
+    // 2. Restore stock for each item via secure RPC
+    for (const item of items) {
+      await apiPost(
+        "/rest/v1/rpc/restore_stock",
+        {
+          p_product_id: item.product_id,
+          p_quantity: item.quantity,
+        },
+        token,
+      );
+    }
+
+    // 3. Update order status to cancelled
+    await apiPatch(
+      `/rest/v1/orders?id=eq.${orderId}`,
+      { status: "cancelled" },
+      token,
+    );
+
+    showToast("Order cancelled successfully", "success");
+
+    // 4. Reload orders
+    const user = getCurrentUser();
+    if (user) {
+      const orders = await apiGet(
+        `/rest/v1/orders?user_id=eq.${user.id}&select=*&order=created_at.desc`,
+        token,
+      );
+      renderOrderHistory(orders);
+    }
+  } catch (e) {
+    console.error("Failed to cancel order:", e);
+    showToast("Failed to cancel order: " + e.message, "error");
+  }
 }
 
 // ════════════════════════════════════════════════════════════════

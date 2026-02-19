@@ -339,6 +339,18 @@
                 await apiPost("/rest/v1/order_items", oi, token);
               }
 
+              // Decrement stock for each ordered product via secure RPC
+              for (const item of cart) {
+                await apiPost(
+                  "/rest/v1/rpc/decrement_stock",
+                  {
+                    p_product_id: item.id,
+                    p_quantity: item.quantity,
+                  },
+                  token,
+                );
+              }
+
               // Clear cart
               localStorage.removeItem("cart");
               updateCartBadge();
