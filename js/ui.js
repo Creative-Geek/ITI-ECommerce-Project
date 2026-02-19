@@ -249,8 +249,11 @@ function injectFooter() {
           </ul>
         </div>
       </div>
-      <div class="border-t mt-8 pt-6 text-center text-xs text-muted-foreground" style="border-color:hsl(var(--border)/0.5)">
+      <div class="border-t mt-8 pt-6 text-center text-xs text-muted-background" style="border-color:hsl(var(--border)/0.5)">
         © ${new Date().getFullYear()} byteStore. Built with ❤️ for ITI.
+      </div>
+      <div class="mt-2 text-center text-xs text-muted-foreground">
+        By Ahmed Taha & Mahmoud Osama.
       </div>
     </div>
   `;
