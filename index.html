@@ -231,6 +231,86 @@
           <!-- Products loaded by JS -->
         </div>
       </section>
+
+      <!-- Promo Banner -->
+      <section class="promo-banner-section py-16 relative overflow-hidden">
+        <div class="absolute inset-0 z-0">
+          <div class="absolute inset-0" style="background: linear-gradient(135deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--accent)) 50%, hsl(var(--primary) / 0.05) 100%);"></div>
+        </div>
+        <div class="uk-container relative z-10 text-center">
+          <h2 class="text-3xl md:text-4xl font-bold mb-4">Summer Tech Sale</h2>
+          <p class="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">Up to 30% off on selected laptops, phones, and accessories. Limited time offer — don't miss out!</p>
+          <a href="shop.html" class="uk-btn uk-btn-primary uk-btn-lg">
+            <i data-lucide="percent" class="h-5 w-5 mr-2"></i> Shop Deals Now
+          </a>
+        </div>
+      </section>
+
+      <!-- Why Shop With Us -->
+      <section class="why-shop-section uk-container py-16">
+        <h2 class="text-2xl font-bold text-center mb-10">Why Shop With Us</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div class="text-center p-4">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center" style="background: hsl(var(--primary) / 0.1);">
+              <i data-lucide="truck" class="h-7 w-7" style="color: hsl(var(--primary));"></i>
+            </div>
+            <h3 class="font-semibold mb-1">Free Delivery</h3>
+            <p class="text-sm text-muted-foreground">On all orders over EGP 5,000</p>
+          </div>
+          <div class="text-center p-4">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center" style="background: hsl(var(--primary) / 0.1);">
+              <i data-lucide="shield-check" class="h-7 w-7" style="color: hsl(var(--primary));"></i>
+            </div>
+            <h3 class="font-semibold mb-1">2-Year Warranty</h3>
+            <p class="text-sm text-muted-foreground">Full coverage on all products</p>
+          </div>
+          <div class="text-center p-4">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center" style="background: hsl(var(--primary) / 0.1);">
+              <i data-lucide="refresh-cw" class="h-7 w-7" style="color: hsl(var(--primary));"></i>
+            </div>
+            <h3 class="font-semibold mb-1">Easy Returns</h3>
+            <p class="text-sm text-muted-foreground">14-day return policy</p>
+          </div>
+          <div class="text-center p-4">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center" style="background: hsl(var(--primary) / 0.1);">
+              <i data-lucide="headphones" class="h-7 w-7" style="color: hsl(var(--primary));"></i>
+            </div>
+            <h3 class="font-semibold mb-1">24/7 Support</h3>
+            <p class="text-sm text-muted-foreground">Always here to help you</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Newsletter Signup -->
+      <section class="newsletter-section uk-container pb-16">
+        <div class="uk-card uk-card-body p-8 md:p-12 text-center" style="background: linear-gradient(135deg, hsl(var(--muted) / 0.5) 0%, hsl(var(--accent)) 100%);">
+          <div class="max-w-xl mx-auto">
+            <div class="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center" style="background: hsl(var(--primary) / 0.1);">
+              <i data-lucide="mail" class="h-8 w-8" style="color: hsl(var(--primary));"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-2">Stay in the Loop</h2>
+            <p class="text-muted-foreground mb-6">Subscribe to our newsletter for exclusive deals, new arrivals, and tech tips delivered to your inbox.</p>
+            <form id="newsletter-form" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <div class="flex-1 relative">
+                <i data-lucide="at-sign" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"></i>
+                <input 
+                  type="email" 
+                  id="newsletter-email" 
+                  placeholder="Enter your email" 
+                  class="uk-input pl-10 w-full"
+                  required
+                />
+              </div>
+              <button type="submit" class="uk-btn uk-btn-primary whitespace-nowrap">
+                <i data-lucide="send" class="h-4 w-4 mr-2"></i> Subscribe
+              </button>
+            </form>
+            <p id="newsletter-success" class="text-sm mt-4 hidden" style="color: hsl(142 71% 45%);">
+              <i data-lucide="check-circle" class="h-4 w-4 inline mr-1"></i> Thanks for subscribing! Check your inbox soon.
+            </p>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- Franken UI JS -->
@@ -271,13 +351,15 @@
         }
       });
 
-      // Pick N products per category for balanced display
+      // Pick N random products per category for balanced display
       function pickPerCategory(products, perCategory) {
         const categories = ["laptop", "phone", "audio", "accessory"];
         const result = [];
         categories.forEach(cat => {
           const catProducts = products.filter(p => p.category === cat);
-          result.push(...catProducts.slice(0, perCategory));
+          // Shuffle and pick first N
+          const shuffled = catProducts.sort(() => Math.random() - 0.5);
+          result.push(...shuffled.slice(0, perCategory));
         });
         return result;
       }
@@ -359,6 +441,30 @@
 
         return starsHtml;
       }
+
+      // Newsletter form handling
+      document.getElementById("newsletter-form")?.addEventListener("submit", function(e) {
+        e.preventDefault();
+        const email = document.getElementById("newsletter-email").value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (!emailRegex.test(email)) {
+          alert("Please enter a valid email address.");
+          return;
+        }
+        
+        // Show success message (mocked - no backend)
+        document.getElementById("newsletter-success").classList.remove("hidden");
+        document.getElementById("newsletter-email").value = "";
+        
+        // Re-init icons for the success message
+        if (typeof lucide !== "undefined") lucide.createIcons();
+        
+        // Hide success message after 5 seconds
+        setTimeout(() => {
+          document.getElementById("newsletter-success").classList.add("hidden");
+        }, 5000);
+      });
     </script>
   </body>
 </html>

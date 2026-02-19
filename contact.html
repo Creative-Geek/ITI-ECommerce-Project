@@ -228,12 +228,33 @@
               return;
             }
 
-            // Simulate success (no backend for contact form)
-            showToast(
-              "Message sent successfully! We'll get back to you soon.",
-              "success",
-            );
-            document.getElementById("contactForm").reset();
+            // Submit to database
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 mr-2 animate-spin"></i> Sending...';
+            if (typeof lucide !== "undefined") lucide.createIcons();
+
+            const messageData = {
+              name: document.getElementById("contact-name").value.trim(),
+              email: document.getElementById("contact-email").value.trim(),
+              subject: document.getElementById("contact-subject").value.trim(),
+              message: document.getElementById("contact-message").value.trim(),
+              user_id: user ? user.id : null
+            };
+
+            try {
+              await apiPost("/rest/v1/contact_messages", messageData, null);
+              showToast("Message sent successfully! We'll get back to you soon.", "success");
+              document.getElementById("contactForm").reset();
+            } catch (err) {
+              console.error("Failed to send message:", err);
+              showToast("Failed to send message. Please try again.", "error");
+            } finally {
+              btn.disabled = false;
+              btn.innerHTML = originalText;
+              if (typeof lucide !== "undefined") lucide.createIcons();
+            }
           });
       });
     </script>

@@ -306,7 +306,7 @@
               localStorage.removeItem("cart");
               updateCartBadge();
 
-              showToast("Order placed successfully! 🎉", "success");
+              showToast("Order placed successfully!", "success");
               setTimeout(() => (window.location.href = "profile.html"), 2000);
             } catch (err) {
               console.error("Order failed:", err);
