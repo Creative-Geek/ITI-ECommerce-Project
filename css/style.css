@@ -645,8 +645,20 @@ main {
 }
 
 .mobile-menu.open {
-  max-height: 600px;
+  max-height: 80vh;
   opacity: 1;
+  overflow-y: auto;
+}
+
+/* Inside mobile menu, search dropdown should flow inline, not clip */
+.mobile-menu .navbar-search-dropdown {
+  position: static;
+  min-width: 0;
+  border-radius: 0.5rem;
+  margin-top: 0.5rem;
+  box-shadow: none;
+  border: 1px solid hsl(var(--border) / 0.3);
+  animation: none;
 }
 
 .mobile-menu-inner {
