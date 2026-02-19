@@ -200,7 +200,11 @@ function injectFooter() {
           <ul class="space-y-2 text-sm">
             <li><a href="profile.html" class="text-muted-foreground hover:text-foreground transition-colors">My Profile</a></li>
             <li><a href="cart.html" class="text-muted-foreground hover:text-foreground transition-colors">Cart</a></li>
-            <li><a href="login.html" class="text-muted-foreground hover:text-foreground transition-colors">Sign In</a></li>
+            ${
+              getCurrentUser() ?
+                `<li><a href="#" onclick="logout()" class="text-muted-foreground hover:text-foreground transition-colors">Sign Out</a></li>`
+              : `<li><a href="login.html" class="text-muted-foreground hover:text-foreground transition-colors">Sign In</a></li>`
+            }
             ${typeof isAdmin === "function" && isAdmin() ? `<li><a href="admin.html" class="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"><i data-lucide="shield" class="h-3.5 w-3.5"></i> Admin</a></li>` : ""}
           </ul>
         </div>
