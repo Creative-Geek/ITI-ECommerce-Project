@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-        <link rel="icon" href="assets/bytestorelogo.svg" type="image/svg+xml" />
+    <link rel="icon" href="assets/bytestorelogo.svg" type="image/svg+xml" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>byteStore - Contact Us</title>
     <meta name="description" content="Get in touch with the byteStore team." />
@@ -12,9 +12,17 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
     />
-    <script>/* Suppress Tailwind CDN dev-mode warning */
+    <script>
+      /* Suppress Tailwind CDN dev-mode warning */
       const _tw_warn = console.warn;
-      console.warn = (...args) => { if (typeof args[0] === "string" && args[0].includes("cdn.tailwindcss.com")) return; _tw_warn.apply(console, args); };
+      console.warn = (...args) => {
+        if (
+          typeof args[0] === "string" &&
+          args[0].includes("cdn.tailwindcss.com")
+        )
+          return;
+        _tw_warn.apply(console, args);
+      };
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -192,7 +200,7 @@
         // Requirement: Form Validation
         document
           .getElementById("contactForm")
-          .addEventListener("submit", (e) => {
+          .addEventListener("submit", async (e) => {
             e.preventDefault();
 
             const fields = [
@@ -232,7 +240,8 @@
             const btn = e.target.querySelector('button[type="submit"]');
             const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 mr-2 animate-spin"></i> Sending...';
+            btn.innerHTML =
+              '<i data-lucide="loader-2" class="h-4 w-4 mr-2 animate-spin"></i> Sending...';
             if (typeof lucide !== "undefined") lucide.createIcons();
 
             const messageData = {
@@ -240,12 +249,15 @@
               email: document.getElementById("contact-email").value.trim(),
               subject: document.getElementById("contact-subject").value.trim(),
               message: document.getElementById("contact-message").value.trim(),
-              user_id: user ? user.id : null
+              user_id: user ? user.id : null,
             };
 
             try {
               await apiPost("/rest/v1/contact_messages", messageData, null);
-              showToast("Message sent successfully! We'll get back to you soon.", "success");
+              showToast(
+                "Message sent successfully! We'll get back to you soon.",
+                "success",
+              );
               document.getElementById("contactForm").reset();
             } catch (err) {
               console.error("Failed to send message:", err);
