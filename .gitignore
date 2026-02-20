@@ -1,6 +1,6 @@
 nul
 database_prep
-docs
+.docs
 .opencode
 .ruff_cache
 .trash

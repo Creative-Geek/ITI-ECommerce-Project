@@ -1,5 +1,4 @@
 // js/cart.js - LocalStorage cart logic (add, remove, total, count)
-// See docs/CODING_PATTERNS.md §3 for full documentation.
 
 /** Get cart from LocalStorage */
 function getCart() {

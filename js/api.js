@@ -1,5 +1,4 @@
 // js/api.js - Raw fetch wrappers for Supabase REST API
-// See docs/CODING_PATTERNS.md §1 for full documentation.
 
 const SUPABASE_URL = "https://mhfuhsaaznvvjiqlpvpw.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_YvjGdS1FpOvUv6W3GF7nOQ_nqEg0o09";

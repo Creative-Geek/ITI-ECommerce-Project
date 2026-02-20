@@ -1,5 +1,4 @@
 // js/auth.js - Login, Register, Logout, session helpers
-// See docs/CODING_PATTERNS.md §2 for full documentation.
 
 /** Register a new user */
 async function register(email, password) {

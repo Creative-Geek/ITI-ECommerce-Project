@@ -1,5 +1,4 @@
 // js/router.js - URL query parameter helpers
-// See docs/CODING_PATTERNS.md §5 for full documentation.
 
 /**
  * Get a query parameter value from the current URL.
