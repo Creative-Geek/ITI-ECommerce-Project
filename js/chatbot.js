@@ -3,11 +3,13 @@
 // - Visible on all pages (loaded via script tag)
 // - Requires login (user-based rate limiting happens in Edge Function)
 // - Conversation memory stored in localStorage
+// - Session IDs tracked for database logging
 // - Calls Supabase Edge Function which proxies Groq + executes tool use
 
 (function () {
   const STORAGE_KEY = "bytestore_chat_history_v1";
   const UI_STATE_KEY = "bytestore_chat_ui_state_v1";
+  const SESSION_ID_KEY = "bytestore_chat_session_id_v1";
 
   // Allow overriding in dev (optional)
   const FUNCTION_URL =
@@ -36,6 +38,21 @@
 
   function clearHistory() {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(SESSION_ID_KEY);
+  }
+
+  function getSessionId() {
+    try {
+      return localStorage.getItem(SESSION_ID_KEY) || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function saveSessionId(sessionId) {
+    try {
+      if (sessionId) localStorage.setItem(SESSION_ID_KEY, sessionId);
+    } catch (_) {}
   }
 
   function addToHistory(role, content) {
@@ -235,6 +252,7 @@
         history: historyForServer
           .filter((m) => m && (m.role === "user" || m.role === "assistant"))
           .slice(-MAX_HISTORY_MESSAGES),
+        session_id: getSessionId(),
       };
 
       const res = await fetch(FUNCTION_URL, {
@@ -277,6 +295,10 @@
 
       const data = await res.json();
       const reply = (data && data.reply) || "تمام.";
+      const newSessionId = data && data.session_id;
+      if (newSessionId) {
+        saveSessionId(newSessionId);
+      }
       renderMessage("assistant", reply);
       addToHistory("assistant", reply);
       renderProducts((data && data.products) || []);
