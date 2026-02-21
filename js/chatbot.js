@@ -11,6 +11,7 @@
   const UI_STATE_KEY = "bytestore_chat_ui_state_v1";
   const SESSION_ID_KEY = "bytestore_chat_session_id_v1";
   const PRODUCTS_KEY = "bytestore_chat_products_v1";
+  const CLEAR_CONFIRM_TIMEOUT_MS = 2500;
 
   // Inject marked.js for markdown rendering (fires immediately, before DOMContentLoaded)
   if (!document.getElementById("chatbot-marked-cdn")) {
@@ -124,11 +125,55 @@
     };
   }
 
+  // Clear button: 2-click confirm (same button)
+  let clearConfirmArmed = false;
+  let clearConfirmTimer = null;
+
+  function syncClearButtonUi() {
+    const { clearBtn } = getEls();
+    if (!clearBtn) return;
+
+    clearBtn.classList.toggle("chatbot-clear-armed", clearConfirmArmed);
+    clearBtn.title = clearConfirmArmed ? "اضغط تاني للمسح" : "مسح المحادثة";
+    clearBtn.setAttribute(
+      "aria-label",
+      clearConfirmArmed ? "Confirm clear chat" : "Clear chat",
+    );
+
+    const icon = clearConfirmArmed ? "alert-triangle" : "trash-2";
+    // Re-render icon reliably even after lucide swaps <i> -> <svg>
+    clearBtn.innerHTML = `<i data-lucide="${icon}" class="h-4 w-4"></i>`;
+    if (typeof lucide !== "undefined") {
+      lucide.createIcons();
+    }
+  }
+
+  function disarmClearConfirm() {
+    clearConfirmArmed = false;
+    if (clearConfirmTimer) {
+      clearTimeout(clearConfirmTimer);
+      clearConfirmTimer = null;
+    }
+    syncClearButtonUi();
+  }
+
+  function armClearConfirm() {
+    clearConfirmArmed = true;
+    syncClearButtonUi();
+    if (clearConfirmTimer) clearTimeout(clearConfirmTimer);
+    clearConfirmTimer = setTimeout(() => {
+      clearConfirmArmed = false;
+      clearConfirmTimer = null;
+      syncClearButtonUi();
+    }, CLEAR_CONFIRM_TIMEOUT_MS);
+  }
+
   function setOpen(isOpen) {
     const { window: win, overlay } = getEls();
     if (!win || !overlay) return;
     win.classList.toggle("open", isOpen);
     overlay.classList.toggle("open", isOpen);
+    if (!isOpen) disarmClearConfirm();
     try {
       localStorage.setItem(UI_STATE_KEY, JSON.stringify({ open: isOpen }));
     } catch (_) {}
@@ -252,6 +297,7 @@
   }
 
   async function sendMessage() {
+    disarmClearConfirm();
     const els = getEls();
     if (!els.input || !els.sendBtn) return;
 
@@ -369,7 +415,10 @@
     const overlay = document.createElement("div");
     overlay.id = "chatbot-overlay";
     overlay.className = "chatbot-overlay";
-    overlay.addEventListener("click", () => setOpen(false));
+    overlay.addEventListener("click", () => {
+      disarmClearConfirm();
+      setOpen(false);
+    });
 
     const fab = document.createElement("button");
     fab.id = "chatbot-fab";
@@ -439,9 +488,10 @@
 
     // Wire actions
     const { input, sendBtn, clearBtn } = getEls();
-    document
-      .getElementById("chatbot-close")
-      ?.addEventListener("click", () => setOpen(false));
+    document.getElementById("chatbot-close")?.addEventListener("click", () => {
+      disarmClearConfirm();
+      setOpen(false);
+    });
     sendBtn?.addEventListener("click", sendMessage);
     input?.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -449,11 +499,17 @@
         sendMessage();
       }
       if (e.key === "Escape") {
+        disarmClearConfirm();
         setOpen(false);
       }
     });
     clearBtn?.addEventListener("click", () => {
-      if (!confirm("تمسح المحادثة؟")) return;
+      if (!clearConfirmArmed) {
+        armClearConfirm();
+        return;
+      }
+
+      disarmClearConfirm();
       clearHistory();
       renderProducts([], false);
       renderHistory();
@@ -471,6 +527,9 @@
 
     // Render initial history
     renderHistory();
+
+    // Ensure clear button initial state is consistent
+    syncClearButtonUi();
 
     // Ensure lucide icons render for injected UI
     if (typeof lucide !== "undefined") {

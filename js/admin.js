@@ -212,11 +212,23 @@ function closeModal() {
 // ════════════════════════════════════════════════════════════════
 
 async function uploadProductImage(input) {
-  const file = input.files[0];
+  const file = input?.files?.[0];
   if (!file) return;
+  await uploadProductImageFile(file);
+  // Reset file input so the same file can be re-selected after failure/success
+  input.value = "";
+}
+
+async function uploadProductImageFile(file) {
+  if (!file) return;
+  if (!String(file.type || "").startsWith("image/")) {
+    showToast("Please drop/select an image file.", "error");
+    return;
+  }
 
   const btn = document.getElementById("upload-image-btn");
   const statusEl = document.getElementById("upload-status");
+  const fileInput = document.getElementById("pf-image-file");
 
   // Show uploading state
   btn.disabled = true;
@@ -275,10 +287,36 @@ async function uploadProductImage(input) {
     btn.disabled = false;
     btn.innerHTML =
       '<i data-lucide="upload" class="h-4 w-4 inline mr-1"></i> Upload Image';
-    // Reset file input so the same file can be re-selected after failure
-    input.value = "";
+    // Reset file input so the same file can be re-selected after drag-drop
+    if (fileInput) fileInput.value = "";
     if (typeof lucide !== "undefined") lucide.createIcons();
   }
+}
+
+function setupProductImageDragDrop() {
+  const urlInput = document.getElementById("pf-image");
+  const uploadBtn = document.getElementById("upload-image-btn");
+
+  // Only set up when elements exist (admin page only)
+  if (!urlInput || !uploadBtn) return;
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    await uploadProductImageFile(file);
+  };
+
+  // Allow dropping onto the image URL input and the upload button area
+  urlInput.addEventListener("dragover", handleDragOver);
+  urlInput.addEventListener("drop", handleDrop);
+  uploadBtn.addEventListener("dragover", handleDragOver);
+  uploadBtn.addEventListener("drop", handleDrop);
 }
 
 async function saveProduct(e) {
@@ -389,6 +427,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("product-form")
     ?.addEventListener("submit", saveProduct);
+
+  setupProductImageDragDrop();
 
   // Close modals on backdrop click
   document.getElementById("product-modal")?.addEventListener("click", (e) => {

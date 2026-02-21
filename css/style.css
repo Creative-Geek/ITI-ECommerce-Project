@@ -1210,6 +1210,17 @@ body {
   background: hsl(var(--muted) / 0.5);
 }
 
+/* Clear chat 2-click confirm state */
+.chatbot-icon-btn.chatbot-clear-armed {
+  border-color: hsl(0 84% 60% / 0.55);
+  background: hsl(0 84% 60% / 0.12);
+  color: hsl(0 84% 60%);
+}
+
+.chatbot-icon-btn.chatbot-clear-armed:hover {
+  background: hsl(0 84% 60% / 0.18);
+}
+
 .chatbot-body {
   flex: 1;
   display: flex;
