@@ -154,6 +154,7 @@
 
     const bubble = document.createElement("div");
     bubble.className = "chatbot-bubble";
+    bubble.setAttribute("dir", "auto");
     if (role === "assistant") {
       bubble.classList.add("markdown");
       bubble.innerHTML = renderMarkdown(content);
@@ -175,7 +176,7 @@
     if (!history.length) {
       renderMessage(
         "assistant",
-        "أهلاً! أنا مساعد byteStore 🤖\nقولّي إنتَ بتدور على إيه (مثلاً: موبايل سامسونج تحت ١٥ ألف).",
+        "أهلاً! أنا Byte\nقولّي إنتَ بتدور على إيه (مثلاً: موبايل سامسونج تحت ١٥ ألف).",
       );
       return;
     }
@@ -387,9 +388,9 @@
     win.setAttribute("aria-label", "byteStore Assistant");
     win.innerHTML = `
       <div class="chatbot-header">
-        <div class="chatbot-title">
+        <div class="chatbot-title" dir="auto">
           <span class="chatbot-title-dot"></span>
-          مساعد byteStore
+          Byte
         </div>
         <div class="chatbot-actions">
           <button id="chatbot-clear" class="chatbot-icon-btn" title="مسح المحادثة" aria-label="Clear chat">
