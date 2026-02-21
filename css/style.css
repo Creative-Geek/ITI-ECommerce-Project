@@ -35,6 +35,21 @@ html {
   --accent-foreground: 192 91% 70%;
 }
 
+/* ── Theme Fade Transition ────────────────────────────────────────────
+   Only active after page load (html.theme-ready) so restoring the saved
+   theme on startup doesn't trigger a visible flash / animation.
+   Applied only to high-level containers to avoid disrupting hover effects.  */
+html.theme-ready,
+html.theme-ready body,
+html.theme-ready main,
+html.theme-ready .site-navbar,
+html.theme-ready .site-footer {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
 /* ── Global Layout ──────────────────────────────────────────────────── */
 body {
   min-height: 100vh;
@@ -843,6 +858,19 @@ body {
 
 .uk-btn-primary:hover {
   transform: scale(1.03);
+}
+
+/* Default buttons — fade and subtle scale on hover */
+.uk-btn-default {
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.uk-btn-default:hover {
+  transform: scale(0.99);
 }
 
 /* Category cards on homepage */

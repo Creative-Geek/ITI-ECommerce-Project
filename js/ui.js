@@ -39,9 +39,17 @@ function toggleTheme() {
 }
 
 // Apply saved theme immediately (called in <head> via inline script ideally, but also here as fallback)
+// Transitions are intentionally disabled here so the initial restore is instant.
 (function () {
   const saved = localStorage.getItem("theme");
   if (saved === "dark") document.documentElement.classList.add("dark");
+  // Enable theme transitions only after the first paint so the saved theme
+  // is applied instantly while all subsequent user-toggled changes animate.
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      document.documentElement.classList.add("theme-ready");
+    });
+  });
 })();
 
 // ════════════════════════════════════════════════════════════════
