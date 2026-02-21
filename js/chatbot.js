@@ -10,6 +10,15 @@
   const STORAGE_KEY = "bytestore_chat_history_v1";
   const UI_STATE_KEY = "bytestore_chat_ui_state_v1";
   const SESSION_ID_KEY = "bytestore_chat_session_id_v1";
+  const PRODUCTS_KEY = "bytestore_chat_products_v1";
+
+  // Inject marked.js for markdown rendering (fires immediately, before DOMContentLoaded)
+  if (!document.getElementById("chatbot-marked-cdn")) {
+    const s = document.createElement("script");
+    s.id = "chatbot-marked-cdn";
+    s.src = "https://cdn.jsdelivr.net/npm/marked@12/marked.min.js";
+    document.head.appendChild(s);
+  }
 
   // Allow overriding in dev (optional)
   const FUNCTION_URL =
@@ -39,6 +48,33 @@
   function clearHistory() {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(SESSION_ID_KEY);
+    localStorage.removeItem(PRODUCTS_KEY);
+  }
+
+  function loadProducts() {
+    try {
+      const raw = localStorage.getItem(PRODUCTS_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function saveProducts(products) {
+    try {
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products || []));
+    } catch (_) {}
+  }
+
+  function renderMarkdown(content) {
+    if (typeof window.marked !== "undefined") {
+      try {
+        return window.marked.parse(content, { breaks: true, gfm: true });
+      } catch (_) {}
+    }
+    // Fallback: plain text
+    return escapeHtml(content).replace(/\n/g, "<br>");
   }
 
   function getSessionId() {
@@ -118,8 +154,12 @@
 
     const bubble = document.createElement("div");
     bubble.className = "chatbot-bubble";
-    // Keep plain text rendering for safety
-    bubble.innerHTML = escapeHtml(content).replace(/\n/g, "<br>");
+    if (role === "assistant") {
+      bubble.classList.add("markdown");
+      bubble.innerHTML = renderMarkdown(content);
+    } else {
+      bubble.innerHTML = escapeHtml(content).replace(/\n/g, "<br>");
+    }
     row.appendChild(bubble);
     messages.appendChild(row);
 
@@ -143,6 +183,10 @@
       if (!m || (m.role !== "user" && m.role !== "assistant")) return;
       renderMessage(m.role, m.content || "");
     });
+
+    // Restore last product suggestions
+    const savedProducts = loadProducts();
+    if (savedProducts.length) renderProducts(savedProducts, false);
   }
 
   function setTyping(isTyping) {
@@ -152,15 +196,18 @@
     if (isTyping) scrollMessagesToBottom();
   }
 
-  function renderProducts(products) {
+  function renderProducts(products, persist = true) {
     const { products: wrap } = getEls();
     if (!wrap) return;
     wrap.innerHTML = "";
 
     if (!products || !products.length) {
       wrap.style.display = "none";
+      if (persist) saveProducts([]);
       return;
     }
+
+    if (persist) saveProducts(products);
 
     wrap.style.display = "block";
     const title = document.createElement("div");
@@ -407,8 +454,7 @@
     clearBtn?.addEventListener("click", () => {
       if (!confirm("تمسح المحادثة؟")) return;
       clearHistory();
-      const { products } = getEls();
-      if (products) products.innerHTML = "";
+      renderProducts([], false);
       renderHistory();
     });
 

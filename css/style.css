@@ -1277,6 +1277,45 @@ body {
   border-bottom-right-radius: 6px;
 }
 
+/* Markdown content inside assistant bubbles */
+.chatbot-bubble.markdown > *:first-child {
+  margin-top: 0;
+}
+.chatbot-bubble.markdown > *:last-child {
+  margin-bottom: 0;
+}
+.chatbot-bubble.markdown p {
+  margin: 0 0 6px;
+}
+.chatbot-bubble.markdown ul,
+.chatbot-bubble.markdown ol {
+  margin: 4px 0 6px 0;
+  padding-inline-start: 18px;
+}
+.chatbot-bubble.markdown li {
+  margin-bottom: 3px;
+}
+.chatbot-bubble.markdown strong {
+  font-weight: 700;
+}
+.chatbot-bubble.markdown em {
+  font-style: italic;
+}
+.chatbot-bubble.markdown code {
+  font-family: monospace;
+  font-size: 0.82em;
+  background: hsl(var(--muted) / 0.5);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.chatbot-bubble.markdown h1,
+.chatbot-bubble.markdown h2,
+.chatbot-bubble.markdown h3 {
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin: 6px 0 4px;
+}
+
 .chatbot-typing {
   display: flex;
   align-items: center;
