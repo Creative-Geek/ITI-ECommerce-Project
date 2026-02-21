@@ -1324,6 +1324,9 @@ body {
 .chatbot-products {
   border-top: 1px dashed hsl(var(--border) / 0.6);
   padding-top: 10px;
+  flex-shrink: 0;
+  max-height: 220px;
+  overflow-y: auto;
 }
 
 .chatbot-products-title {
