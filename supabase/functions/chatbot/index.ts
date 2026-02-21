@@ -19,7 +19,7 @@ const corsHeaders = {
 };
 
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = Deno.env.get("GROQ_MODEL") || "llama-3.3-70b-versatile";
+const GROQ_MODEL = Deno.env.get("GROQ_MODEL") || "openai/gpt-oss-120b";
 const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY") || "";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
@@ -79,10 +79,32 @@ async function groqChat(payload: unknown) {
     return JSON.parse(text);
 }
 
+// Common tech term synonyms → what's actually in the DB
+const QUERY_SYNONYMS: Record<string, string> = {
+    "stylus": "S Pen",
+    "ستايلس": "S Pen",
+    "قلم": "S Pen",
+    "foldable": "foldable",
+    "فولدابل": "foldable",
+    "قابل للطي": "foldable",
+    "tws": "true wireless",
+    "anc": "noise cancell",
+    "noise cancelling": "noise cancell",
+    "إلغاء الضوضاء": "noise cancell",
+    "gaming": "gaming",
+    "جيمينج": "gaming",
+};
+
+function expandQuery(q: string): string {
+    const lower = q.toLowerCase().trim();
+    return QUERY_SYNONYMS[lower] ?? q;
+}
+
 // ── Tool handlers ──────────────────────────────────────────────
 
 async function execSearchProducts(adminClient: any, args: any) {
-    const query = args?.query ? sanitizeQuery(String(args.query)) : "";
+    const rawQuery = args?.query ? sanitizeQuery(String(args.query)) : "";
+    const query = rawQuery ? expandQuery(rawQuery) : "";
     const category = args?.category ? String(args.category) : null;
     const brand = args?.brand ? String(args.brand) : null;
     const minPrice = typeof args?.min_price === "number" ? args.min_price : null;
@@ -100,7 +122,7 @@ async function execSearchProducts(adminClient: any, args: any) {
     if (maxPrice !== null) q = q.lte("price", maxPrice);
     if (query) {
         q = q.or(
-            `name.ilike.%${query}%,description.ilike.%${query}%,brand.ilike.%${query}%`,
+            `name.ilike.%${query}%,description.ilike.%${query}%,brand.ilike.%${query}%,specs.ilike.%${query}%`,
         );
     }
     if (sort === "price_asc") q = q.order("price", { ascending: true });
@@ -380,7 +402,7 @@ serve(async (req: Request) => {
         ];
 
         let lastProducts: any[] = [];
-        let toolsUsedInResponse: string[] = [];
+        let toolsUsedInResponse: { tool: string; args: any; result: any }[] = [];
 
         for (let i = 0; i < MAX_AGENT_ITERS; i++) {
             const completion = await groqChat({
@@ -421,11 +443,6 @@ serve(async (req: Request) => {
 
                     let toolResult: any;
 
-                    // Track tool usage
-                    if (toolName && !toolsUsedInResponse.includes(toolName)) {
-                        toolsUsedInResponse.push(toolName);
-                    }
-
                     if (toolName === "search_products") {
                         toolResult = await execSearchProducts(adminClient, args);
                         if (toolResult.products?.length) {
@@ -436,6 +453,9 @@ serve(async (req: Request) => {
                     } else {
                         toolResult = { error: `Unknown tool: ${toolName}` };
                     }
+
+                    // Track full tool call: name + args + result
+                    toolsUsedInResponse.push({ tool: toolName, args, result: toolResult });
 
                     agentMessages.push({
                         role: "tool",
