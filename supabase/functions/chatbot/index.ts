@@ -81,9 +81,6 @@ async function groqChat(payload: unknown) {
 
 // ── Tool handlers ──────────────────────────────────────────────
 
-// Track global tools used in current response (for logging)
-let responseToolsUsed: string[] = [];
-
 async function execSearchProducts(adminClient: any, args: any) {
     const query = args?.query ? sanitizeQuery(String(args.query)) : "";
     const category = args?.category ? String(args.category) : null;
@@ -403,11 +400,6 @@ serve(async (req: Request) => {
                 agentMessages.push(assistantMsg);
 
                 for (const tc of assistantMsg.tool_calls) {
-                    // Track which tools are being used
-                    const toolName = tc?.function?.name;
-                    if (toolName && !toolsUsedInResponse.includes(toolName)) {
-                        toolsUsedInResponse.push(toolName);
-                    }
                     const toolName = tc?.function?.name;
                     const toolCallId = tc?.id;
                     const argsText = tc?.function?.arguments || "{}";
