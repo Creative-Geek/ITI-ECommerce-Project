@@ -21,7 +21,38 @@ const corsHeaders = {
 
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = Deno.env.get("GROQ_MODEL") || "openai/gpt-oss-120b";
-const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY") || "";
+
+/**
+ * API key rotation:
+ * - Preferred: GROQ_API_KEYS="key1,key2,key3" (comma-separated)
+ * - Supported: GROQ_API_KEY_1 / GROQ_API_KEY_2 / GROQ_API_KEY_3
+ * - Backward compatible: GROQ_API_KEY
+ */
+function getGroqApiKeys(): string[] {
+    const uniq: string[] = [];
+    const push = (k: string | null | undefined) => {
+        const key = (k || "").trim();
+        if (!key) return;
+        if (!uniq.includes(key)) uniq.push(key);
+    };
+
+    const listRaw = Deno.env.get("GROQ_API_KEYS");
+    if (listRaw) {
+        for (const part of listRaw.split(",")) push(part);
+    }
+
+    // Indexed keys (explicit rotation order)
+    push(Deno.env.get("GROQ_API_KEY_1"));
+    push(Deno.env.get("GROQ_API_KEY_2"));
+    push(Deno.env.get("GROQ_API_KEY_3"));
+
+    // Legacy single key
+    push(Deno.env.get("GROQ_API_KEY"));
+
+    return uniq;
+}
+
+const GROQ_API_KEYS = getGroqApiKeys();
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
@@ -62,22 +93,136 @@ function sanitizeQuery(q: string) {
 }
 
 async function groqChat(payload: unknown) {
-    if (!GROQ_API_KEY) {
-        throw new Error("Missing GROQ_API_KEY secret");
+    if (!Array.isArray(GROQ_API_KEYS) || GROQ_API_KEYS.length === 0) {
+        throw new Error(
+            "Missing Groq API key(s). Set GROQ_API_KEYS or GROQ_API_KEY/GROQ_API_KEY_1..3",
+        );
     }
-    const res = await fetch(GROQ_ENDPOINT, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${GROQ_API_KEY}`,
-        },
-        body: JSON.stringify(payload),
-    });
-    const text = await res.text();
-    if (!res.ok) {
-        throw new Error(`Groq error (${res.status}): ${text}`);
+
+    const isRateLimit = (status: number, bodyText: string) => {
+        const hay = `${bodyText}`.toLowerCase();
+        return (
+            status === 429 ||
+            hay.includes("rate limit") ||
+            hay.includes("rate_limit_exceeded")
+        );
+    };
+
+    const isToolCallValidationFailure = (status: number, bodyText: string) => {
+        if (status !== 400) return false;
+        const hay = `${bodyText}`.toLowerCase();
+        return (
+            hay.includes("tool call validation failed") ||
+            hay.includes("tool_use_failed") ||
+            hay.includes("invalid_request_error")
+        );
+    };
+
+    const tryParseGroqError = (bodyText: string) => {
+        try {
+            return JSON.parse(bodyText);
+        } catch {
+            return null;
+        }
+    };
+
+    const withToolSchemaRepairHint = (origPayload: any, groqBodyText: string) => {
+        // Add a corrective instruction to avoid sending nulls for optional tool parameters.
+        // This addresses Groq-side tool validation failures like:
+        //   expected string, but got null
+        const errObj = tryParseGroqError(groqBodyText);
+        const errMsg = errObj?.error?.message ? String(errObj.error.message) : "";
+
+        const repairMsg = [
+            "Tool call repair instruction:",
+            "- When calling tools, NEVER send null for optional fields.",
+            "- If a field is unknown, OMIT the key entirely.",
+            "- Ensure argument types match the JSON schema exactly.",
+            errMsg ? `Groq validation error was: ${errMsg}` : "",
+        ]
+            .filter(Boolean)
+            .join("\n");
+
+        const nextPayload = { ...origPayload };
+        const msgs = Array.isArray(origPayload?.messages)
+            ? [...origPayload.messages]
+            : [];
+        // Place near the end so it is freshest to the model.
+        msgs.push({ role: "system", content: repairMsg });
+        nextPayload.messages = msgs;
+        return nextPayload;
+    };
+
+    let lastErr: string | null = null;
+
+    for (let i = 0; i < GROQ_API_KEYS.length; i++) {
+        const apiKey = GROQ_API_KEYS[i];
+
+        // If Groq rejects tool calls due to schema mismatch, we retry once with a repair hint.
+        let repairAttemptedForThisKey = false;
+
+        let res: Response;
+        try {
+            const doFetch = async (bodyPayload: any) => {
+                return await fetch(GROQ_ENDPOINT, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${apiKey}`,
+                    },
+                    body: JSON.stringify(bodyPayload),
+                });
+            };
+
+            res = await doFetch(payload);
+            let text = await res.text();
+
+            // Tool-call validation failures can happen when the model outputs `null` for optional args.
+            // Retry once with an explicit repair instruction (same API key).
+            if (
+                !res.ok &&
+                !repairAttemptedForThisKey &&
+                isToolCallValidationFailure(res.status, text)
+            ) {
+                repairAttemptedForThisKey = true;
+                const repairedPayload = withToolSchemaRepairHint(payload as any, text);
+                res = await doFetch(repairedPayload);
+                text = await res.text();
+            }
+
+            // From here on, use the final response body.
+            if (res.ok) {
+                try {
+                    return JSON.parse(text);
+                } catch (parseErr: any) {
+                    throw new Error(
+                        `Groq response JSON parse error: ${String(parseErr?.message || parseErr)}. Body: ${text}`,
+                    );
+                }
+            }
+
+            // Keep the *original* Groq body text intact in the error message for observability.
+            lastErr = `Groq error (${res.status}): ${text}`;
+
+            // Failsafe rotation: on rate limits, try the next API key.
+            if (isRateLimit(res.status, text) && i < GROQ_API_KEYS.length - 1) {
+                console.warn(`Groq rate limited with key #${i + 1}; rotating to next key`);
+                continue;
+            }
+
+            throw new Error(lastErr);
+        } catch (fetchErr: any) {
+            // Network/DNS/etc. Keep last error and only rotate if we have another key.
+            lastErr = `Groq fetch error: ${String(fetchErr?.message || fetchErr)}`;
+            if (i < GROQ_API_KEYS.length - 1) {
+                console.warn(`Groq request failed with key #${i + 1}; trying next key`);
+                continue;
+            }
+            throw new Error(lastErr);
+        }
     }
-    return JSON.parse(text);
+
+    throw new Error(lastErr || "Groq error: no usable API keys");
 }
 
 // Common tech term synonyms → what's actually in the DB
@@ -393,32 +538,38 @@ serve(async (req: Request) => {
                         type: "object",
                         properties: {
                             query: {
-                                type: "string",
+                                anyOf: [{ type: "string" }, { type: "null" }],
                                 description:
                                     "Free text query to match against product name, brand, or description. Use Arabic or English keywords. Optional.",
                             },
                             category: {
-                                type: "string",
-                                description:
-                                    "Filter by product category.",
-                                enum: ["laptop", "phone", "audio", "accessory"],
+                                anyOf: [
+                                    {
+                                        type: "string",
+                                        enum: ["laptop", "phone", "audio", "accessory"],
+                                    },
+                                    { type: "null" },
+                                ],
+                                description: "Filter by product category.",
                             },
                             brand: {
-                                type: "string",
+                                anyOf: [{ type: "string" }, { type: "null" }],
                                 description: "Filter by brand name (e.g., Apple, Samsung, Xiaomi). Case-insensitive partial match. Optional.",
                             },
                             min_price: {
-                                type: "number",
+                                anyOf: [{ type: "number" }, { type: "null" }],
                                 description: "Minimum price in EGP (inclusive). Optional.",
                             },
                             max_price: {
-                                type: "number",
+                                anyOf: [{ type: "number" }, { type: "null" }],
                                 description: "Maximum price in EGP (inclusive). Optional.",
                             },
                             sort: {
-                                type: "string",
+                                anyOf: [
+                                    { type: "string", enum: ["price_asc", "price_desc"] },
+                                    { type: "null" },
+                                ],
                                 description: "Sort results by price.",
-                                enum: ["price_asc", "price_desc"],
                             },
                         },
                     },
@@ -434,10 +585,15 @@ serve(async (req: Request) => {
                         type: "object",
                         properties: {
                             category: {
-                                type: "string",
+                                anyOf: [
+                                    {
+                                        type: "string",
+                                        enum: ["laptop", "phone", "audio", "accessory"],
+                                    },
+                                    { type: "null" },
+                                ],
                                 description:
                                     "Filter by product category. Omit to get store-wide stats.",
-                                enum: ["laptop", "phone", "audio", "accessory"],
                             },
                         },
                     },
