@@ -93,6 +93,60 @@ It's built entirely with **HTML, CSS, and vanilla JavaScript** (no React, Vue, o
 
 ---
 
+## 🤖 AI Chatbot (Groq + Supabase Edge Function)
+
+This project includes an **Egyptian Arabic** chatbot that helps users find products.
+
+### How it works
+
+- Frontend widget: `js/chatbot.js` (conversation is saved in `localStorage`)
+- Backend: Supabase **Edge Function** at `/functions/v1/chatbot`
+- LLM: **Groq** model `llama-3.3-70b-versatile` using **tool use / function calling**
+- The model can call a tool `search_products` to query your actual `products` table (max **5** results)
+
+> Security: the Groq API key is stored as a Supabase secret and never exposed to the browser.
+
+### Requirements
+
+- User must be **logged in** to use the chatbot
+- Rate limit: **20 messages / 10 minutes / user** (configurable in the Edge Function)
+
+### Setup (Supabase)
+
+1. Create the rate limit function/table by running the migration SQL:
+
+`supabase/migrations/20260221000000_chatbot_rate_limit.sql`
+
+2. Set Edge Function secrets:
+
+```bash
+supabase secrets set GROQ_API_KEY=YOUR_GROQ_KEY
+supabase secrets set GROQ_MODEL=llama-3.3-70b-versatile
+```
+
+> The Edge Function also requires `SUPABASE_SERVICE_ROLE_KEY` in its environment.
+> If you deploy through Supabase CLI, this is typically available to functions automatically.
+> If not, set it as a secret too:
+
+```bash
+supabase secrets set SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+```
+
+3. Deploy the function:
+
+```bash
+supabase functions deploy chatbot
+```
+
+### Frontend integration
+
+All pages already load:
+
+- `css/style.css` (contains widget styles)
+- `js/chatbot.js` (injects the floating icon + chat window)
+
+---
+
 ## 📁 Project Structure
 
 ```

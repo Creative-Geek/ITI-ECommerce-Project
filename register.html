@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-        <link rel="icon" href="assets/bytestorelogo.svg" type="image/svg+xml" />
+    <link rel="icon" href="assets/bytestorelogo.svg" type="image/svg+xml" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>byteStore - Sign Up</title>
     <meta name="description" content="Create your byteStore account." />
@@ -12,9 +12,17 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/franken-ui@2.0.0/dist/css/core.min.css"
     />
-    <script>/* Suppress Tailwind CDN dev-mode warning */
+    <script>
+      /* Suppress Tailwind CDN dev-mode warning */
       const _tw_warn = console.warn;
-      console.warn = (...args) => { if (typeof args[0] === "string" && args[0].includes("cdn.tailwindcss.com")) return; _tw_warn.apply(console, args); };
+      console.warn = (...args) => {
+        if (
+          typeof args[0] === "string" &&
+          args[0].includes("cdn.tailwindcss.com")
+        )
+          return;
+        _tw_warn.apply(console, args);
+      };
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -149,6 +157,7 @@
     <script src="js/cart.js"></script>
     <script src="js/router.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/chatbot.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         // Redirect if already logged in
