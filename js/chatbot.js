@@ -317,7 +317,8 @@
       return;
     }
 
-    const token = localStorage.getItem("access_token");
+    // Use getValidToken to automatically refresh if needed (from api.js)
+    const token = await getValidToken();
     if (!token) {
       showLoginHint();
       renderMessage(
@@ -360,6 +361,38 @@
       });
 
       if (res.status === 401) {
+        // Token refresh might have failed - try one more time with fresh token
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          // Retry with new token
+          const retryRes = await fetch(FUNCTION_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${newToken}`,
+              ...(apikey ? { apikey } : {}),
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (retryRes.ok) {
+            const data = await retryRes.json();
+            const reply = (data && data.reply) || "تمام.";
+            const newSessionId = data && data.session_id;
+            if (newSessionId) {
+              saveSessionId(newSessionId);
+            }
+            renderMessage("assistant", reply);
+            addToHistory("assistant", reply);
+            renderProducts((data && data.products) || []);
+            setTyping(false);
+            els.sendBtn.disabled = false;
+            scrollMessagesToBottom();
+            return;
+          }
+        }
+
+        // If we get here, session is definitely expired
         showLoginHint();
         renderMessage(
           "assistant",

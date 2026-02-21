@@ -418,6 +418,16 @@ main {
     z-index: 1;
     pointer-events: none;
   }
+
+  /* Dark mode gradient overlay for mobile */
+  .dark .hero-section-banner::after {
+    background: linear-gradient(
+      to bottom,
+      hsl(var(--background) / 0.8) 0%,
+      hsl(var(--background) / 0.4) 60%,
+      transparent 100%
+    );
+  }
 }
 
 /* ── Product Cards ──────────────────────────────────────────────────── */
