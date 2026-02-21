@@ -3,7 +3,7 @@
 // Supabase Edge Function: chatbot
 // - Verifies logged-in user via JWT
 // - Applies user-based rate limiting (via SQL RPC)
-// - Calls Groq (llama-3.3-70b-versatile) with tool use
+// - Calls Groq (openai/gpt-oss-120b) with tool use
 // - Executes `search_products` tool against Supabase `products` table (limit 5)
 // - Executes `show_products` tool to explicitly push curated product IDs to the UI
 

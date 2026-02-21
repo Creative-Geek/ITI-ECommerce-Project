@@ -206,6 +206,151 @@ Returns all reviews for a specific product. Public access (no auth required).
 
 ---
 
+## Chatbot (Edge Function)
+
+### Send Message to AI Assistant
+
+```
+POST /functions/v1/chatbot
+```
+
+**Auth required:** User JWT in the `Authorization` header.
+
+**Headers:**
+
+```json
+{
+  "Authorization": "Bearer <user_jwt>",
+  "apikey": "<SUPABASE_ANON_KEY>",
+  "Content-Type": "application/json"
+}
+```
+
+**Body:**
+
+```json
+{
+  "message": "عاوز موبايل سامسونج تحت 15 ألف",
+  "history": [
+    { "role": "user", "content": "السلام عليكم" },
+    {
+      "role": "assistant",
+      "content": "أهلاً! أنا Byte\nقولّي إنتَ بتدور على إيه..."
+    }
+  ],
+  "session_id": "uuid-string-optional"
+}
+```
+
+**Request Fields:**
+
+- `message` (required) — The user's message to the chatbot (Arabic or English)
+- `history` (optional) — Array of previous messages in the conversation (max 24 messages)
+  - Each message has `role` ("user" or "assistant") and `content` (string)
+- `session_id` (optional) — UUID of existing chat session. If omitted, a new session is created
+
+**Response (Success):**
+
+```json
+{
+  "reply": "لقيت ليك كام اختيار من سامسونج في الميزانية دي:\n\n1. Samsung Galaxy A54...",
+  "products": [
+    {
+      "id": 123,
+      "name": "Samsung Galaxy A54 5G",
+      "price": 14999,
+      "category": "phone",
+      "brand": "Samsung",
+      "image_url": "https://..."
+    }
+  ],
+  "session_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Response Fields:**
+
+- `reply` — The chatbot's text response
+- `products` — Array of product objects to display as cards (0-5 products)
+- `session_id` — UUID of the chat session for this conversation
+
+**Error Responses:**
+
+**401 Unauthorized:**
+
+```json
+{
+  "message": "Unauthorized",
+  "details": "Missing JWT"
+}
+```
+
+**429 Too Many Requests (Rate Limited):**
+
+```json
+{
+  "message": "معلش، عدد الرسائل كتير قوي دلوقتي. جرّب تاني بعد شوية.",
+  "retry_after": 600
+}
+```
+
+**Headers:** `Retry-After: 600` (seconds until the rate limit resets)
+
+**500 Internal Server Error:**
+
+```json
+{
+  "message": "Internal error",
+  "details": "Groq error (500): ..."
+}
+```
+
+### How the Chatbot Works
+
+1. **Authentication** — Verifies the user's JWT token
+2. **Rate Limiting** — Checks if the user has exceeded 20 messages in the last 10 minutes
+3. **Query Expansion** — Translates Arabic keywords to English (شاحن → charger, كيبورد → keyboard)
+4. **Function Calling** — Sends the message to Groq's LLM with three available tools:
+   - `search_products` — Search the products table by query, category, brand, price
+   - `get_price_range` — Get min/max prices and counts for categories
+   - `show_products` — Display specific product IDs as UI cards
+5. **Tool Execution** — When the LLM calls a tool, the Edge Function queries the database
+6. **Response Generation** — The LLM generates a natural language reply based on tool results
+7. **Logging** — Conversation is saved to `chat_sessions` and `chat_messages` tables
+
+### Tools Available to the LLM
+
+**search_products:**
+
+```json
+{
+  "query": "charger fast",
+  "category": "accessory",
+  "brand": "Anker",
+  "min_price": 2000,
+  "max_price": 5000,
+  "sort": "price_asc"
+}
+```
+
+**get_price_range:**
+
+```json
+{
+  "category": "laptop"
+}
+```
+
+**show_products:**
+
+```json
+{
+  "ids": ["123", "456", "789"]
+}
+```
+
+---
+
 ## Storage (Image Upload)
 
 ### Upload a Product Image (Admin)

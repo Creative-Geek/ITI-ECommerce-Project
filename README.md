@@ -28,18 +28,19 @@ It's built entirely with **HTML, CSS, and vanilla JavaScript** (no React, Vue, o
 
 ## ✨ Features
 
-| Feature                 | Description                                                                      |
-| ----------------------- | -------------------------------------------------------------------------------- |
-| 🛍️ **Product Browsing** | Browse 128+ products across 4 categories with images, specs, and reviews         |
-| 🔍 **Search & Filters** | Search by name, filter by category, brand, and price range                       |
-| 🛒 **Shopping Cart**    | Add/remove items, adjust quantities, see live totals — all saved in your browser |
-| 💳 **Checkout**         | Complete checkout form with address and phone validation                         |
-| 🔐 **User Accounts**    | Register, log in, and manage your profile                                        |
-| 🌙 **Dark Mode**        | Toggle between light and dark themes                                             |
-| 📱 **Responsive**       | Looks great on desktop, tablet, and mobile                                       |
-| ⭐ **Product Reviews**  | Each product has customer reviews and ratings                                    |
-| 🔧 **Admin Dashboard**  | Manage products (add, edit, delete) with image uploads                           |
-| 🎨 **Modern Design**    | Smooth animations, hover effects, and a brand logo carousel                      |
+| Feature                  | Description                                                                      |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| 🛍️ **Product Browsing**  | Browse 128+ products across 4 categories with images, specs, and reviews         |
+| 🔍 **Search & Filters**  | Search by name, filter by category, brand, and price range                       |
+| 🛒 **Shopping Cart**     | Add/remove items, adjust quantities, see live totals — all saved in your browser |
+| 💳 **Checkout**          | Complete checkout form with address and phone validation                         |
+| 🔐 **User Accounts**     | Register, log in, and manage your profile                                        |
+| 🤖 **AI Chatbot "Byte"** | Egyptian Arabic shopping assistant powered by Groq with bilingual support        |
+| 🌙 **Dark Mode**         | Toggle between light and dark themes                                             |
+| 📱 **Responsive**        | Looks great on desktop, tablet, and mobile                                       |
+| ⭐ **Product Reviews**   | Each product has customer reviews and ratings                                    |
+| 🔧 **Admin Dashboard**   | Manage products (add, edit, delete) with image uploads                           |
+| 🎨 **Modern Design**     | Smooth animations, hover effects, and a brand logo carousel                      |
 
 ---
 
@@ -93,57 +94,86 @@ It's built entirely with **HTML, CSS, and vanilla JavaScript** (no React, Vue, o
 
 ---
 
-## 🤖 AI Chatbot (Groq + Supabase Edge Function)
+## 🤖 AI Chatbot "Byte" (Groq + Supabase Edge Function)
 
-This project includes an **Egyptian Arabic** chatbot that helps users find products.
+This project includes **Byte**, an Egyptian Arabic AI shopping assistant powered by Groq that helps users find products through natural conversation.
+
+### Key Features
+
+- **Bilingual Support:** Understands both Arabic and English queries with automatic keyword translation
+- **Smart Product Search:** Searches across product names, descriptions, brands, and specs
+- **Tool Use / Function Calling:** Can search products, get price ranges, and display curated results
+- **Conversational Memory:** Maintains conversation history (up to 24 messages) for context
+- **Session Logging:** All conversations are logged to the database for analytics
+- **Rate Limited:** 20 messages per 10 minutes per user to prevent abuse
 
 ### How it works
 
-- Frontend widget: `js/chatbot.js` (conversation is saved in `localStorage`)
-- Backend: Supabase **Edge Function** at `/functions/v1/chatbot`
-- LLM: **Groq** model `llama-3.3-70b-versatile` using **tool use / function calling**
-- The model can call a tool `search_products` to query your actual `products` table (max **5** results)
+- **Frontend widget:** `js/chatbot.js` — floating chat button with conversation UI
+- **Backend:** Supabase Edge Function at `/functions/v1/chatbot`
+- **LLM:** Groq model `openai/gpt-oss-120b` with function calling
+- **Tools Available:**
+  - `search_products` — Search products by query, category, brand, price range, and sort order
+  - `get_price_range` — Get min/max prices and product counts for categories
+  - `show_products` — Display curated product cards in the chat UI
+- **Translation Layer:** Arabic tech terms (شاحن, كيبورد, سماعة, etc.) are automatically translated to English for accurate searches
 
-> Security: the Groq API key is stored as a Supabase secret and never exposed to the browser.
+> **Security:** The Groq API key is stored as a Supabase secret and never exposed to the browser.
 
 ### Requirements
 
 - User must be **logged in** to use the chatbot
 - Rate limit: **20 messages / 10 minutes / user** (configurable in the Edge Function)
+- Conversation history stored in `localStorage` and synchronized with the database
 
 ### Setup (Supabase)
 
-1. Create the rate limit function/table by running the migration SQL:
+1. **Create database tables** by running the migrations:
 
-`supabase/migrations/20260221000000_chatbot_rate_limit.sql`
+```bash
+# Rate limiting table
+supabase/migrations/20260221000000_chatbot_rate_limit.sql
 
-2. Set Edge Function secrets:
+# Chat sessions and messages logging
+supabase/migrations/20260221000001_chat_logging_tables.sql
+```
+
+2. **Set Edge Function secrets:**
 
 ```bash
 supabase secrets set GROQ_API_KEY=YOUR_GROQ_KEY
-supabase secrets set GROQ_MODEL=llama-3.3-70b-versatile
+supabase secrets set GROQ_MODEL=openai/gpt-oss-120b
 ```
 
 > The Edge Function also requires `SUPABASE_SERVICE_ROLE_KEY` in its environment.
 > If you deploy through Supabase CLI, this is typically available to functions automatically.
-> If not, set it as a secret too:
+> If not, set it as a secret:
 
 ```bash
 supabase secrets set SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
 ```
 
-3. Deploy the function:
+3. **Deploy the function:**
 
 ```bash
 supabase functions deploy chatbot
 ```
 
-### Frontend integration
+### Frontend Integration
 
-All pages already load:
+All pages load:
 
-- `css/style.css` (contains widget styles)
-- `js/chatbot.js` (injects the floating icon + chat window)
+- `css/style.css` — contains chatbot widget styles
+- `js/chatbot.js` — injects the floating button + chat window
+
+The chatbot automatically appears on all pages. Users must log in to use it.
+
+### Arabic Query Examples
+
+- "عاوز موبايل سامسونج تحت 15 ألف" → Finds Samsung phones under 15,000 EGP
+- "شاحن سريع" → Finds fast chargers
+- "لابتوب للجيمينج" → Finds gaming laptops
+- "سماعة gaming لاسلكي" → Finds wireless gaming headsets
 
 ---
 
@@ -162,9 +192,18 @@ byteStore/
 │   ├── api.js         # Fetch wrappers for Supabase REST API
 │   ├── auth.js        # Login, register, logout, session management
 │   ├── cart.js        # LocalStorage-based cart logic
+│   ├── chatbot.js     # AI shopping assistant widget
 │   ├── admin.js       # Admin dashboard functionality
 │   ├── ui.js          # DOM rendering and UI components
 │   └── router.js      # URL parameter helpers
+├── supabase/          # Supabase backend code
+│   ├── functions/
+│   │   └── chatbot/   # Edge Function for AI chatbot
+│   │       └── index.ts
+│   └── migrations/    # Database schema and setup
+│       ├── 20260221000000_chatbot_rate_limit.sql
+│       └── 20260221000001_chat_logging_tables.sql
+├── database_prep/     # Product data seed files
 ├── index.html         # Home page
 ├── shop.html          # Product catalog
 ├── product.html       # Product detail page

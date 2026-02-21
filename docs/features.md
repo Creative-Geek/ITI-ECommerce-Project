@@ -117,3 +117,113 @@ Every page is fully responsive:
 - **Hover effects** — cards lift with shadow on hover, buttons scale subtly
 - **Brand carousel** — auto-scrolling logo strip on the homepage with grayscale-to-color hover effect
 - **Loading states** — spinner animations during form submissions and data fetches
+
+---
+
+## AI Shopping Assistant "Byte"
+
+An intelligent chatbot that helps users discover products through natural conversation in Egyptian Arabic or English.
+
+### Overview
+
+Byte is powered by Groq's `openai/gpt-oss-120b` model and uses function calling (tool use) to search your actual product database. The chatbot appears as a floating button on all pages and opens into a full chat interface.
+
+### Key Capabilities
+
+- **Bilingual Understanding** — Accepts queries in Arabic, English, or a mix of both
+- **Smart Query Translation** — Automatically translates Arabic tech terms to English:
+  - شاحن → charger
+  - كيبورد → keyboard
+  - سماعة → headphone
+  - لاسلكي → wireless
+  - جيمينج → gaming
+  - And many more...
+- **Multi-keyword Search** — Splits queries like "شاحن سريع" into individual keywords for better matching
+- **Category-aware** — Can filter by laptop, phone, audio, or accessory categories
+- **Price Range Queries** — Can answer "what's the cheapest laptop?" or "how much do phones cost?"
+- **Conversational Memory** — Remembers the last 24 messages for context-aware responses
+
+### Tools & Functions
+
+Byte has access to three tools that query the live database:
+
+1. **search_products**
+   - Searches by query text, category, brand, price range
+   - Returns up to 5 matching products
+   - Supports sorting by price ascending or descending
+
+2. **get_price_range**
+   - Returns min/max prices and total count for a category
+   - Used when asking about price ranges or availability
+
+3. **show_products**
+   - Displays curated product cards with images, prices, and links
+   - Byte selects only the most relevant results to show
+
+### User Experience
+
+- **Authentication Required** — Users must log in to use the chatbot
+- **Rate Limited** — 20 messages per 10 minutes per user to prevent abuse
+- **Persistent Conversations** — Chat history stored in `localStorage` and survives page refreshes
+- **Session Tracking** — All conversations logged to database with session IDs for analytics
+- **Product Recommendations** — Clicking a product card in chat navigates to the product detail page
+- **Right-to-Left Support** — Chat messages automatically detect text direction with `dir="auto"`
+
+### Example Interactions
+
+**Arabic queries:**
+
+- "عاوز موبايل سامسونج تحت 15 ألف"  
+  → Finds Samsung phones under 15,000 EGP
+
+- "شاحن سريع"  
+  → Finds fast chargers in the accessory category
+
+- "لابتوب للجيمينج"  
+  → Searches for gaming laptops
+
+**English queries:**
+
+- "wireless gaming headset"  
+  → Finds wireless gaming headphones
+
+- "keyboard under 3000"  
+  → Finds keyboards priced under 3,000 EGP
+
+**Mixed queries:**
+
+- "سماعة gaming لاسلكي"  
+  → Understands mixed Arabic/English and finds wireless gaming headsets
+
+### Technical Architecture
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant ChatWidget
+    participant EdgeFunction
+    participant Groq
+    participant Database
+
+    User->>ChatWidget: Sends message
+    ChatWidget->>EdgeFunction: POST /functions/v1/chatbot
+    EdgeFunction->>EdgeFunction: Check rate limit
+    EdgeFunction->>EdgeFunction: Expand Arabic query
+    EdgeFunction->>Groq: Send message + tools + history
+    Groq->>EdgeFunction: Tool calls (search_products)
+    EdgeFunction->>Database: Query products table
+    Database->>EdgeFunction: Return matching products
+    EdgeFunction->>Groq: Send tool results
+    Groq->>EdgeFunction: Final response + show_products call
+    EdgeFunction->>Database: Log conversation
+    EdgeFunction->>ChatWidget: Reply + product IDs
+    ChatWidget->>User: Display message + product cards
+```
+
+### Security & Privacy
+
+- **JWT Authentication** — User identity verified on every request
+- **API Key Protection** — Groq API key stored server-side as Supabase secret
+- **No Client-Side LLM Calls** — All AI interactions happen in the secure Edge Function
+- **Rate Limiting** — SQL-based rate limit table prevents spam
+- **Conversation Logging** — All chats stored with user IDs and timestamps for moderation
