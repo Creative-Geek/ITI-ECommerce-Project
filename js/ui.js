@@ -263,6 +263,11 @@ function injectFooter() {
       <div class="mt-2 text-center text-xs text-muted-foreground">
         By Ahmed Taha & Mahmoud Osama.
       </div>
+      <div class="mt-3 text-center">
+        <a href="https://github.com/Creative-Geek/ITI-ECommerce-Project" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1" aria-label="GitHub Repository">
+          <i data-lucide="github" class="h-5 w-5"></i>
+        </a>
+      </div>
     </div>
   `;
 
